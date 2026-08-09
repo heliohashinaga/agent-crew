@@ -12,6 +12,31 @@ from pathlib import Path
 from typing import Any
 
 from ai_factory.shared.telemetry.emitter import TelemetryCapable, sanitize
+from ai_factory.shared.telemetry.record import DevRoleInvocation, TelemetryRecord
+
+DEFAULT_TELEMETRY = ".factory/telemetry"
+
+
+def record_dev_invocation(
+    role: str,
+    run_id: str,
+    store_path: str | Path = DEFAULT_TELEMETRY,
+    *,
+    result: str = "pass",
+    capability_level: str = "standard",
+    model: str = "",
+    overspend: bool | None = None,
+) -> None:
+    """Record one dev-role invocation into the telemetry store (T071, FR-016)."""
+    FileTelemetryStore(store_path).add(
+        run_id,
+        DevRoleInvocation(
+            role=role,  # type: ignore[arg-type]
+            model=model,
+            capability_level=capability_level,
+            telemetry=TelemetryRecord(result=result, overspend=overspend),
+        ),
+    )
 
 
 class FileTelemetryStore:

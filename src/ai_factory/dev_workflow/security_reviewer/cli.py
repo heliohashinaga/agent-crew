@@ -1,8 +1,4 @@
-"""orchestrator library CLI (T038, FR-009).
-
-Reads an approved spec (JSON) and emits its :class:`ExecutionPlan` in JSON
-(default) or human form. Pure decision layer — no specialized work.
-"""
+"""security-reviewer library CLI (T057, FR-020)."""
 
 from __future__ import annotations
 
@@ -10,26 +6,24 @@ import argparse
 import sys
 from pathlib import Path
 
-from ai_factory.dev_workflow.orchestrator.orchestrator import plan
+from ai_factory.dev_workflow.security_reviewer.reviewer import review
 from ai_factory.shared.cli_util import (
     EXIT_ERROR,
+    EXIT_REJECTED,
     add_output_format_arg,
     emit,
     run,
     write_stderr,
     write_stdout,
 )
-from ai_factory.shared.spec_store.models import SpecVersion
 from ai_factory.shared.telemetry.store import record_dev_invocation
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="orchestrator", description="Plan execution per role."
+        prog="security-reviewer", description="Scan produced files."
     )
-    parser.add_argument(
-        "--spec-file", required=True, help="Path to an approved SpecVersion JSON"
-    )
+    parser.add_argument("--repo", required=True, help="Repo directory to scan")
     parser.add_argument("--run-id", default="", help="run_id for telemetry recording")
     parser.add_argument(
         "--telemetry", default=".factory/telemetry", help="telemetry store directory"
@@ -44,19 +38,20 @@ def main(argv: list[str] | None = None) -> int:
     except SystemExit as exc:
         return EXIT_ERROR if exc.code != 0 else 0
 
-    try:
-        spec = SpecVersion.model_validate_json(
-            Path(args.spec_file).read_text(encoding="utf-8")
-        )
-    except OSError, ValueError:
-        write_stderr(f"error: cannot read spec from {args.spec_file}\n")
+    repo = Path(args.repo)
+    if not repo.exists():
+        write_stderr(f"error: repo {repo} does not exist\n")
         return EXIT_ERROR
 
-    write_stdout(emit(plan(spec), args.format))
+    verdict = review(repo)
+    write_stdout(emit(verdict, args.format))
     record_dev_invocation(
-        "orchestrator", args.run_id or "orchestrator-auto", args.telemetry
+        "security_reviewer",
+        args.run_id or "security-reviewer-auto",
+        args.telemetry,
+        result="pass" if verdict.approved else "fail",
     )
-    return 0
+    return 0 if verdict.approved else EXIT_REJECTED
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -109,41 +109,41 @@ through a CLI; the two workflows are thin CLIs that compose libraries.
 
 **Goal**: ADR only for architecturally significant decisions. **Independent test**: one task with a trade-off → ADR; one trivial fix → no ADR.
 
-- [ ] T042 [US6] Write failing test for the ADR model and conditional-production rule in `tests/unit/dev_workflow/technical_planner/test_adr.py`
-- [ ] T043 [US6] Implement the `ArchitectureDecisionRecord` Pydantic model in `src/ai_factory/dev_workflow/technical_planner/adr.py` (data-model.md, FR-008)
-- [ ] T044 [US6] Write failing contract test for the technical-planner library CLI in `tests/contract/dev_workflow/test_technical_planner_cli.py`
-- [ ] T045 [US6] Implement the technical-planner role library (assessment + TechnicalPlan + conditional ADR when `architecture_impact=true`) in `src/ai_factory/dev_workflow/technical_planner/planner.py` and `src/ai_factory/dev_workflow/technical_planner/cli.py` (FR-007, FR-008)
-- [ ] T046 [US6] Implement ADR-adherence validation in the code-reviewer library in `src/ai_factory/dev_workflow/code_reviewer/reviewer.py` (validates against linked ADR; FR-008)
-- [ ] T047 [US6] Validate US6 against quickstart Scenario 7 (trade-off → ADR; trivial fix → none) and mark the US6 checklist item complete
+- [x] T042 [US6] Write failing test for the ADR model and conditional-production rule in `tests/unit/dev_workflow/technical_planner/test_adr.py`
+- [x] T043 [US6] Implement the `ArchitectureDecisionRecord` Pydantic model in `src/ai_factory/dev_workflow/technical_planner/adr.py` (data-model.md, FR-008)
+- [x] T044 [US6] Write failing contract test for the technical-planner library CLI in `tests/contract/dev_workflow/test_technical_planner_cli.py`
+- [x] T045 [US6] Implement the technical-planner role library (assessment + TechnicalPlan + conditional ADR when `architecture_impact=true`) in `src/ai_factory/dev_workflow/technical_planner/planner.py` and `src/ai_factory/dev_workflow/technical_planner/cli.py` (FR-007, FR-008)
+- [x] T046 [US6] Implement ADR-adherence validation in the code-reviewer library in `src/ai_factory/dev_workflow/code_reviewer/reviewer.py` (validates against linked ADR; FR-008)
+- [x] T047 [US6] Validate US6 against quickstart Scenario 7 (trade-off → ADR; trivial fix → none) and mark the US6 checklist item complete
 
 ## Phase 7: User Story 2 — Build and Deliver a Pull Request from an Approved Spec (P1)
 
 **Goal**: approved spec → factory-opened PR with all checks passing, no auto-merge. **Independent test**: run dev-run from an approved `spec_version_id` and receive a PR. Depends on US1 (hand-off), US4 (orchestrator), US5 (telemetry), US6 (ADR path).
 
-- [ ] T048 [US2] Write failing contract test for the code-worker library CLI in `tests/contract/dev_workflow/test_code_worker_cli.py`
-- [ ] T049 [US2] Implement the code-worker role library (implementation + unit tests, local validation, documentation when required) in `src/ai_factory/dev_workflow/code_worker/worker.py` and `src/ai_factory/dev_workflow/code_worker/cli.py` (FR-011)
-- [ ] T050 [US2] Write failing contract test for the code-reviewer library CLI in `tests/contract/dev_workflow/test_code_reviewer_cli.py`
-- [ ] T051 [US2] Implement the code-reviewer role library (validate and approve; ADR adherence) in `src/ai_factory/dev_workflow/code_reviewer/reviewer.py` and `src/ai_factory/dev_workflow/code_reviewer/cli.py` (FR-011)
-- [ ] T052 [US2] Write failing contract test for the test-engineer library CLI in `tests/contract/dev_workflow/test_test_engineer_cli.py`
-- [ ] T053 [US2] Implement the test-engineer role library (produce test suite) in `src/ai_factory/dev_workflow/test_engineer/engineer.py` and `src/ai_factory/dev_workflow/test_engineer/cli.py` (FR-011)
-- [ ] T054 [US2] Write failing contract test for the test-runner library CLI in `tests/contract/dev_workflow/test_test_runner_cli.py`
-- [ ] T055 [US2] Implement the test-runner role library (run tests; pass/fail evidence) in `src/ai_factory/dev_workflow/test_runner/runner.py` and `src/ai_factory/dev_workflow/test_runner/cli.py` (FR-011)
-- [ ] T056 [US2] Write failing contract test for the security-reviewer library CLI in `tests/contract/dev_workflow/test_security_reviewer_cli.py`
-- [ ] T057 [US2] Implement the security-reviewer role library (assess and approve; CRITICAL → halt + fix + re-audit) in `src/ai_factory/dev_workflow/security_reviewer/reviewer.py` and `src/ai_factory/dev_workflow/security_reviewer/cli.py` (FR-011, FR-014)
-- [ ] T058 [US2] Write failing test for the sandbox runner (AI-generated code isolated; repo mounted rw; host protected) in `tests/unit/shared/sandbox/test_sandbox.py`
-- [ ] T059 [US2] Implement the sandbox library (container/sandbox runner; fail-early if no runtime) in `src/ai_factory/shared/sandbox/runner.py` (FR-021, SC-013)
-- [ ] T060 [US2] Wire the test-runner to execute AI-generated tests inside the sandbox in `src/ai_factory/dev_workflow/test_runner/runner.py` (FR-021)
-- [ ] T061 [US2] Write failing contract test for the git-host client (open PR; pluggable adapter) in `tests/contract/shared/test_git_host_cli.py` (uses a fake host)
-- [ ] T062 [US2] Implement the pluggable git-host client (open PR via host API; credentials from secret store; no auto-merge) in `src/ai_factory/shared/git_host/client.py` and one adapter in `src/ai_factory/shared/git_host/adapters/github.py` (FR-022, SC-014)
-- [ ] T063 [US2] Write failing integration test for the dev workflow graph (plan → orchestrate → execute → review/test/security → deliver PR; no human gate between plan and execution) in `tests/integration/test_dev_workflow.py`
-- [ ] T064 [US2] Implement the Development Workflow LangGraph `StateGraph` (planner → orchestrator → code_worker → code_reviewer → test_engineer/test_runner → security_reviewer → deliver) in `src/ai_factory/dev_workflow/graph.py` (FR-007..012, FR-023)
-- [ ] T065 [US2] Write failing test that the run does NOT auto-merge and the PR is opened on the host in `tests/integration/test_dev_workflow.py`
-- [ ] T066 [US2] Implement the `dev-run` thin CLI (`spec_version_id`-in → PR out; `--resume`; exit codes 0/4/5) in `src/ai_factory/cli/dev_run.py` (contracts/dev-run-cli.md, FR-012, FR-022)
-- [ ] T067 [US2] Write failing test for resumability (interrupt → resume skips completed checkpoints) in `tests/integration/test_dev_workflow.py`
-- [ ] T068 [US2] Implement checkpointing at role/phase boundaries in `src/ai_factory/dev_workflow/graph.py` and `src/ai_factory/shared/state/checkpointer.py` (FR-020, SC-012)
-- [ ] T069 [US2] Write failing test for soft budget (continue + warn + record overspend; no hard-stop) in `tests/integration/test_dev_workflow.py`
-- [ ] T070 [US2] Implement soft-budget enforcement (warn + telemetry `overspend=true`; never abort on budget) in `src/ai_factory/dev_workflow/orchestrator/budget.py` (FR-019, SC-011)
-- [ ] T071 [US2] Wire telemetry emission into every dev-role library CLI in `src/ai_factory/dev_workflow/*/cli.py` (US5)
+- [x] T048 [US2] Write failing contract test for the code-worker library CLI in `tests/contract/dev_workflow/test_code_worker_cli.py`
+- [x] T049 [US2] Implement the code-worker role library (implementation + unit tests, local validation, documentation when required) in `src/ai_factory/dev_workflow/code_worker/worker.py` and `src/ai_factory/dev_workflow/code_worker/cli.py` (FR-011)
+- [x] T050 [US2] Write failing contract test for the code-reviewer library CLI in `tests/contract/dev_workflow/test_code_reviewer_cli.py`
+- [x] T051 [US2] Implement the code-reviewer role library (validate and approve; ADR adherence) in `src/ai_factory/dev_workflow/code_reviewer/reviewer.py` and `src/ai_factory/dev_workflow/code_reviewer/cli.py` (FR-011)
+- [x] T052 [US2] Write failing contract test for the test-engineer library CLI in `tests/contract/dev_workflow/test_test_engineer_cli.py`
+- [x] T053 [US2] Implement the test-engineer role library (produce test suite) in `src/ai_factory/dev_workflow/test_engineer/engineer.py` and `src/ai_factory/dev_workflow/test_engineer/cli.py` (FR-011)
+- [x] T054 [US2] Write failing contract test for the test-runner library CLI in `tests/contract/dev_workflow/test_test_runner_cli.py`
+- [x] T055 [US2] Implement the test-runner role library (run tests; pass/fail evidence) in `src/ai_factory/dev_workflow/test_runner/runner.py` and `src/ai_factory/dev_workflow/test_runner/cli.py` (FR-011)
+- [x] T056 [US2] Write failing contract test for the security-reviewer library CLI in `tests/contract/dev_workflow/test_security_reviewer_cli.py`
+- [x] T057 [US2] Implement the security-reviewer role library (assess and approve; CRITICAL → halt + fix + re-audit) in `src/ai_factory/dev_workflow/security_reviewer/reviewer.py` and `src/ai_factory/dev_workflow/security_reviewer/cli.py` (FR-011, FR-014)
+- [x] T058 [US2] Write failing test for the sandbox runner (AI-generated code isolated; repo mounted rw; host protected) in `tests/unit/shared/sandbox/test_sandbox.py`
+- [x] T059 [US2] Implement the sandbox library (container/sandbox runner; fail-early if no runtime) in `src/ai_factory/shared/sandbox/runner.py` (FR-021, SC-013)
+- [x] T060 [US2] Wire the test-runner to execute AI-generated tests inside the sandbox in `src/ai_factory/dev_workflow/test_runner/runner.py` (FR-021)
+- [x] T061 [US2] Write failing contract test for the git-host client (open PR; pluggable adapter) in `tests/contract/shared/test_git_host_cli.py` (uses a fake host)
+- [x] T062 [US2] Implement the pluggable git-host client (open PR via host API; credentials from secret store; no auto-merge) in `src/ai_factory/shared/git_host/client.py` and one adapter in `src/ai_factory/shared/git_host/adapters/github.py` (FR-022, SC-014)
+- [x] T063 [US2] Write failing integration test for the dev workflow graph (plan → orchestrate → execute → review/test/security → deliver PR; no human gate between plan and execution) in `tests/integration/test_dev_workflow.py`
+- [x] T064 [US2] Implement the Development Workflow LangGraph `StateGraph` (planner → orchestrator → code_worker → code_reviewer → test_engineer/test_runner → security_reviewer → deliver) in `src/ai_factory/dev_workflow/graph.py` (FR-007..012, FR-023)
+- [x] T065 [US2] Write failing test that the run does NOT auto-merge and the PR is opened on the host in `tests/integration/test_dev_workflow.py`
+- [x] T066 [US2] Implement the `dev-run` thin CLI (`spec_version_id`-in → PR out; `--resume`; exit codes 0/4/5) in `src/ai_factory/cli/dev_run.py` (contracts/dev-run-cli.md, FR-012, FR-022)
+- [x] T067 [US2] Write failing test for resumability (interrupt → resume skips completed checkpoints) in `tests/integration/test_dev_workflow.py`
+- [x] T068 [US2] Implement checkpointing at role/phase boundaries in `src/ai_factory/dev_workflow/graph.py` and `src/ai_factory/shared/state/checkpointer.py` (FR-020, SC-012)
+- [x] T069 [US2] Write failing test for soft budget (continue + warn + record overspend; no hard-stop) in `tests/integration/test_dev_workflow.py`
+- [x] T070 [US2] Implement soft-budget enforcement (warn + telemetry `overspend=true`; never abort on budget) in `src/ai_factory/dev_workflow/orchestrator/budget.py` (FR-019, SC-011)
+- [x] T071 [US2] Wire telemetry emission into every dev-role library CLI in `src/ai_factory/dev_workflow/*/cli.py` (US5)
 - [ ] T072 [US2] Validate US2 end-to-end against quickstart Scenarios 2, 4, 6 and mark the US2 checklist item complete
 
 ## Phase 8: User Story 3 — Issue Handling, Retry, Escalation, Re-Planning (P1)

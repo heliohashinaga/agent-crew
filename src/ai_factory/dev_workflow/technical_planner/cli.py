@@ -1,8 +1,4 @@
-"""orchestrator library CLI (T038, FR-009).
-
-Reads an approved spec (JSON) and emits its :class:`ExecutionPlan` in JSON
-(default) or human form. Pure decision layer — no specialized work.
-"""
+"""technical-planner library CLI (T045, FR-007/008)."""
 
 from __future__ import annotations
 
@@ -10,7 +6,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from ai_factory.dev_workflow.orchestrator.orchestrator import plan
+from ai_factory.dev_workflow.technical_planner.planner import produce_plan
 from ai_factory.shared.cli_util import (
     EXIT_ERROR,
     add_output_format_arg,
@@ -25,7 +21,7 @@ from ai_factory.shared.telemetry.store import record_dev_invocation
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="orchestrator", description="Plan execution per role."
+        prog="technical-planner", description="Plan a feature technically."
     )
     parser.add_argument(
         "--spec-file", required=True, help="Path to an approved SpecVersion JSON"
@@ -52,9 +48,9 @@ def main(argv: list[str] | None = None) -> int:
         write_stderr(f"error: cannot read spec from {args.spec_file}\n")
         return EXIT_ERROR
 
-    write_stdout(emit(plan(spec), args.format))
+    write_stdout(emit(produce_plan(spec), args.format))
     record_dev_invocation(
-        "orchestrator", args.run_id or "orchestrator-auto", args.telemetry
+        "technical_planner", args.run_id or "technical-planner-auto", args.telemetry
     )
     return 0
 

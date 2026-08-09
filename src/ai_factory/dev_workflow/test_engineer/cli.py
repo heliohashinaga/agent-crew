@@ -1,8 +1,4 @@
-"""orchestrator library CLI (T038, FR-009).
-
-Reads an approved spec (JSON) and emits its :class:`ExecutionPlan` in JSON
-(default) or human form. Pure decision layer — no specialized work.
-"""
+"""test-engineer library CLI (T053, FR-011)."""
 
 from __future__ import annotations
 
@@ -10,7 +6,8 @@ import argparse
 import sys
 from pathlib import Path
 
-from ai_factory.dev_workflow.orchestrator.orchestrator import plan
+from ai_factory.dev_workflow.technical_planner.planner import TechnicalPlan
+from ai_factory.dev_workflow.test_engineer.engineer import build_test_suite
 from ai_factory.shared.cli_util import (
     EXIT_ERROR,
     add_output_format_arg,
@@ -19,17 +16,17 @@ from ai_factory.shared.cli_util import (
     write_stderr,
     write_stdout,
 )
-from ai_factory.shared.spec_store.models import SpecVersion
 from ai_factory.shared.telemetry.store import record_dev_invocation
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="orchestrator", description="Plan execution per role."
+        prog="test-engineer", description="Produce a test suite."
     )
     parser.add_argument(
-        "--spec-file", required=True, help="Path to an approved SpecVersion JSON"
+        "--plan-file", required=True, help="Path to a TechnicalPlan JSON"
     )
+    parser.add_argument("--repo", required=True, help="Repo directory to write into")
     parser.add_argument("--run-id", default="", help="run_id for telemetry recording")
     parser.add_argument(
         "--telemetry", default=".factory/telemetry", help="telemetry store directory"
@@ -45,16 +42,17 @@ def main(argv: list[str] | None = None) -> int:
         return EXIT_ERROR if exc.code != 0 else 0
 
     try:
-        spec = SpecVersion.model_validate_json(
-            Path(args.spec_file).read_text(encoding="utf-8")
+        plan = TechnicalPlan.model_validate_json(
+            Path(args.plan_file).read_text(encoding="utf-8")
         )
     except OSError, ValueError:
-        write_stderr(f"error: cannot read spec from {args.spec_file}\n")
+        write_stderr(f"error: cannot read plan from {args.plan_file}\n")
         return EXIT_ERROR
 
-    write_stdout(emit(plan(spec), args.format))
+    product = build_test_suite(plan, Path(args.repo))
+    write_stdout(emit(product, args.format))
     record_dev_invocation(
-        "orchestrator", args.run_id or "orchestrator-auto", args.telemetry
+        "test_engineer", args.run_id or "test-engineer-auto", args.telemetry
     )
     return 0
 
