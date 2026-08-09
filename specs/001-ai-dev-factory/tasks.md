@@ -53,16 +53,16 @@ through a CLI; the two workflows are thin CLIs that compose libraries.
 
 ## Phase 2: Foundational (blocking prerequisites for all user stories)
 
-- [ ] T006 [P] Write failing test for `FactoryState` and core state models in `tests/unit/shared/state/test_factory_state.py`
-- [ ] T007 [P] Implement Pydantic `FactoryState`, `RunState`, `Checkpoint`, `ApprovalStatus` in `src/ai_factory/shared/state/factory_state.py`
-- [ ] T008 [P] Write failing test for the secret/redaction library in `tests/unit/shared/secrets/test_redaction.py`
-- [ ] T009 [P] Implement env/secret-store credential loaders and secret-value redaction in `src/ai_factory/shared/secrets/loader.py` (FR-018)
-- [ ] T010 [P] Write failing test for the spec-store (versioned persistence, stable `spec_version_id`) in `tests/unit/shared/spec_store/test_spec_store.py`
-- [ ] T011 [P] Implement local-filesystem spec store with versioning and `spec_version_id` in `src/ai_factory/shared/spec_store/store.py` (FR-025)
-- [ ] T012 Write failing test for the LLM provider abstraction in `tests/unit/shared/llm/test_provider.py` (uses a fake provider; no network)
-- [ ] T013 Implement the pluggable LLM provider abstraction with env/secret-store credentials in `src/ai_factory/shared/llm/provider.py` (R5, FR-018)
-- [ ] T014 Write failing test for the library CLI convention harness (JSON/human output, exit codes, redaction) in `tests/contract/test_library_cli_convention.py`
-- [ ] T015 Implement the shared CLI helpers (output formatting, exit codes, telemetry hook, redaction wrapper) in `src/ai_factory/shared/cli_util.py` (contracts/library-cli-convention.md)
+- [x] T006 [P] Write failing test for `FactoryState` and core state models in `tests/unit/shared/state/test_factory_state.py`
+- [x] T007 [P] Implement Pydantic `FactoryState`, `RunState`, `Checkpoint`, `ApprovalStatus` in `src/ai_factory/shared/state/factory_state.py`
+- [x] T008 [P] Write failing test for the secret/redaction library in `tests/unit/shared/secrets/test_redaction.py`
+- [x] T009 [P] Implement env/secret-store credential loaders and secret-value redaction in `src/ai_factory/shared/secrets/loader.py` (FR-018)
+- [x] T010 [P] Write failing test for the spec-store (versioned persistence, stable `spec_version_id`) in `tests/unit/shared/spec_store/test_spec_store.py`
+- [x] T011 [P] Implement local-filesystem spec store with versioning and `spec_version_id` in `src/ai_factory/shared/spec_store/store.py` (FR-025)
+- [x] T012 Write failing test for the LLM provider abstraction in `tests/unit/shared/llm/test_provider.py` (uses a fake provider; no network)
+- [x] T013 Implement the pluggable LLM provider abstraction with env/secret-store credentials in `src/ai_factory/shared/llm/provider.py` (R5, FR-018)
+- [x] T014 Write failing test for the library CLI convention harness (JSON/human output, exit codes, redaction) in `tests/contract/test_library_cli_convention.py`
+- [x] T015 Implement the shared CLI helpers (output formatting, exit codes, telemetry hook, redaction wrapper) in `src/ai_factory/shared/cli_util.py` (contracts/library-cli-convention.md)
 
 ## Phase 3: User Story 1 — Specify a Feature from a Natural-Language Request (P1)
 
