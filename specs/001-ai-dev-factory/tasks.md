@@ -68,17 +68,17 @@ through a CLI; the two workflows are thin CLIs that compose libraries.
 
 **Goal**: text request → approved, versioned spec with no code. **Independent test**: submit one concrete request and receive an approved `SpecVersion` (intent, rationale, testable AC, DoD, edge case) containing no implementation code.
 
-- [ ] T016 [US1] Write failing contract test for the spec-agent library CLI in `tests/contract/spec_workflow/test_spec_agent_cli.py`
-- [ ] T017 [US1] Implement the spec-agent role library (drafts spec: intent, rationale, AC, DoD, edge cases; surfaces bounded clarifications) in `src/ai_factory/spec_workflow/spec_agent/agent.py` and `src/ai_factory/spec_workflow/spec_agent/cli.py` (FR-002, FR-003, FR-006)
-- [ ] T018 [US1] Write failing contract test for the requirements-reviewer library CLI in `tests/contract/spec_workflow/test_requirements_reviewer_cli.py`
-- [ ] T019 [US1] Implement the requirements-reviewer role library (validates clarity/completeness/consistency/testability/edge-case coverage; Approve/Reject with reasons) in `src/ai_factory/spec_workflow/requirements_reviewer/reviewer.py` and `src/ai_factory/spec_workflow/requirements_reviewer/cli.py` (FR-004)
-- [ ] T020 [US1] Write failing integration test for the spec workflow graph (draft → review → amend loop; bounded reject cycles) in `tests/integration/test_spec_workflow.py`
-- [ ] T021 [US1] Implement the Specification Workflow LangGraph `StateGraph` (spec_agent ↔ requirements_reviewer loop, human-approval gate) in `src/ai_factory/spec_workflow/graph.py` (FR-004, FR-005)
-- [ ] T022 [US1] Write failing integration test for the human-approval gate (no `approved` without human approval) in `tests/integration/test_spec_workflow.py`
-- [ ] T023 [US1] Implement the `spec-run` thin CLI (text-in → approved `spec_version_id` out; exit codes 0/2/3) in `src/ai_factory/cli/spec_run.py` (contracts/spec-run-cli.md, FR-005, FR-025)
-- [ ] T024 [US1] Write failing test for the spec-workflow → dev-workflow hand-off boundary (dev consumes by reference, no re-derivation; carries `spec_version_id`/`spec_run_id`) in `tests/integration/test_handoff.py`
-- [ ] T025 [US1] Implement the hand-off seam (emit approved `SpecVersion` with stable `spec_version_id` + `spec_run_id`; reference-only loader) in `src/ai_factory/shared/spec_store/handoff.py` (FR-024, FR-025, SC-016, SC-017)
-- [ ] T026 [US1] Validate US1 end-to-end against quickstart Scenario 1 and mark the US1 checklist item complete
+- [x] T016 [US1] Write failing contract test for the spec-agent library CLI in `tests/contract/spec_workflow/test_spec_agent_cli.py`
+- [x] T017 [US1] Implement the spec-agent role library (drafts spec: intent, rationale, AC, DoD, edge cases; surfaces bounded clarifications) in `src/ai_factory/spec_workflow/spec_agent/agent.py` and `src/ai_factory/spec_workflow/spec_agent/cli.py` (FR-002, FR-003, FR-006)
+- [x] T018 [US1] Write failing contract test for the requirements-reviewer library CLI in `tests/contract/spec_workflow/test_requirements_reviewer_cli.py`
+- [x] T019 [US1] Implement the requirements-reviewer role library (validates clarity/completeness/consistency/testability/edge-case coverage; Approve/Reject with reasons) in `src/ai_factory/spec_workflow/requirements_reviewer/reviewer.py` and `src/ai_factory/spec_workflow/requirements_reviewer/cli.py` (FR-004)
+- [x] T020 [US1] Write failing integration test for the spec workflow graph (draft → review → amend loop; bounded reject cycles) in `tests/integration/test_spec_workflow.py`
+- [x] T021 [US1] Implement the Specification Workflow LangGraph `StateGraph` (spec_agent ↔ requirements_reviewer loop, human-approval gate) in `src/ai_factory/spec_workflow/graph.py` (FR-004, FR-005)
+- [x] T022 [US1] Write failing integration test for the human-approval gate (no `approved` without human approval) in `tests/integration/test_spec_workflow.py`
+- [x] T023 [US1] Implement the `spec-run` thin CLI (text-in → approved `spec_version_id` out; exit codes 0/2/3) in `src/ai_factory/cli/spec_run.py` (contracts/spec-run-cli.md, FR-005, FR-025)
+- [x] T024 [US1] Write failing test for the spec-workflow → dev-workflow hand-off boundary (dev consumes by reference, no re-derivation; carries `spec_version_id`/`spec_run_id`) in `tests/integration/test_handoff.py`
+- [x] T025 [US1] Implement the hand-off seam (emit approved `SpecVersion` with stable `spec_version_id` + `spec_run_id`; reference-only loader) in `src/ai_factory/shared/spec_store/handoff.py` (FR-024, FR-025, SC-016, SC-017)
+- [x] T026 [US1] Validate US1 end-to-end against quickstart Scenario 1 and mark the US1 checklist item complete
 
 ## Phase 4: User Story 5 — Make the Factory Observable and Data-Driven (P2, built before US2/US3/US4)
 

@@ -1,4 +1,5 @@
 """Verify the conftest blocks network in non-integration tests (T003)."""
+
 import socket
 
 import pytest

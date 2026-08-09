@@ -30,8 +30,7 @@ def _spec(version: int = 1, **overrides: object) -> SpecVersion:
         "acceptance_criteria": [
             AcceptanceCriterion(
                 statement=(
-                    "Given a registered user, "
-                    "resetting the password sends an email"
+                    "Given a registered user, resetting the password sends an email"
                 ),
                 verified_by="integration test",
             )

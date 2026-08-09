@@ -118,11 +118,13 @@ def _human_render(value: Any, indent: int = 0) -> str:
     if isinstance(value, list):
         if not value:
             return f"{pad}(empty)"
-        parts = [_human_render(item, indent + 1) for item in value]
-        return "\n".join(
-            f"{pad}- {line.lstrip()}" if i == 0 else line
-            for i, line in enumerate(parts)
-        )
+        lines: list[str] = []
+        for item in value:
+            rendered = _human_render(item, indent + 1)
+            sub = rendered.split("\n")
+            lines.append(f"{pad}- {sub[0].lstrip()}")
+            lines.extend(sub[1:])
+        return "\n".join(lines)
     return f"{pad}{value}"
 
 

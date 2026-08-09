@@ -55,6 +55,12 @@ def test_human_format_is_not_json() -> None:
     assert "role" in text
 
 
+def test_human_list_each_item_bulleted() -> None:
+    text = emit({"opts": ["a", "b"]}, fmt="human")
+    assert text.count("- a") == 1 and text.count("- b") == 1
+    assert "opts:" in text
+
+
 def test_add_output_format_arg_defaults_to_json() -> None:
     parser = argparse.ArgumentParser()
     add_output_format_arg(parser)

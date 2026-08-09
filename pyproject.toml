@@ -16,8 +16,8 @@ dependencies = [
 ]
 
 [project.scripts]
-# Workflow CLIs (wired in later phases; defined now to lock the entry points)
-# spec-run = "ai_factory.cli.spec_run:main"
+# Workflow CLIs. spec-run is wired in Phase 3 (US1); dev-run arrives with US2.
+spec-run = "ai_factory.cli.spec_run:main"
 # dev-run  = "ai_factory.cli.dev_run:main"
 
 [dependency-groups]

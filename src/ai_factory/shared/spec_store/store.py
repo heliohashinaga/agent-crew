@@ -53,9 +53,7 @@ class FileSpecStore:
         feature_slug = spec.feature_slug
         latest = self.latest(feature_slug)
         version = (
-            spec.version
-            if spec.version
-            else (latest.version + 1 if latest else 1)
+            spec.version if spec.version else (latest.version + 1 if latest else 1)
         )
         if not spec.spec_version_id:
             spec.spec_version_id = generate_version_id(feature_slug, version)
@@ -94,8 +92,10 @@ class FileSpecStore:
             if path.name == "latest.json":
                 continue
             try:
-                specs.append(SpecVersion.model_validate_json(path.read_text(encoding="utf-8")))
-            except (ValueError, OSError):
+                specs.append(
+                    SpecVersion.model_validate_json(path.read_text(encoding="utf-8"))
+                )
+            except ValueError, OSError:
                 # Skip unreadable files rather than failing the whole listing.
                 continue
         specs.sort(key=lambda s: s.version)
