@@ -11,3 +11,6 @@ wheels/
 
 # Local session data
 .pi/
+
+# Local runtime data (spec stores, telemetry)
+.factory/
