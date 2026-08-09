@@ -12,7 +12,7 @@ import json
 import pytest
 
 from ai_factory.cli.dev_run import main
-from ai_factory.shared.cli_util import EXIT_DEV_FAILED, run
+from ai_factory.shared.cli_util import EXIT_DEV_FAILED, EXIT_STOPPED_HUMAN, run
 from ai_factory.shared.spec_store.handoff import publish_approved
 from ai_factory.shared.spec_store.models import AcceptanceCriterion, SpecVersion
 from ai_factory.shared.spec_store.store import FileSpecStore
@@ -66,8 +66,8 @@ def test_delivered_exit_zero(tmp_path, capsys: pytest.CaptureFixture[str]) -> No
     assert data["spec_version_id"] == version_id
 
 
-def test_failed_exit_four(tmp_path, capsys) -> None:
-    """A spec that cannot pass review/tests ⇒ exit 4, no PR."""
+def test_stopped_human_after_retries(tmp_path, capsys) -> None:
+    """A spec that never passes eventually hands to a human ⇒ exit 5 (FR-015)."""
     version_id = _published_spec(tmp_path)
     code = run(
         main,
@@ -86,7 +86,7 @@ def test_failed_exit_four(tmp_path, capsys) -> None:
             "fake",
         ],
     )
-    assert code == EXIT_DEV_FAILED
+    assert code == EXIT_STOPPED_HUMAN
 
 
 def test_unknown_spec_version_exit_four(tmp_path, capsys) -> None:

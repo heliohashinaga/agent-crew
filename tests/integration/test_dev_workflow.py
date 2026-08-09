@@ -116,7 +116,7 @@ def test_rework_loop_fails_then_delivers(tmp_path) -> None:
 
 
 def test_security_reject_blocks_pr(tmp_path) -> None:
-    """T067: a security finding means failed delivery and NO PR."""
+    """T067/FR-014: a security finding means NO PR until fixed/re-audited."""
 
     def sabotage(update, state):
         secret_file = state["repo"] + "/leak.py"
@@ -125,14 +125,15 @@ def test_security_reject_blocks_pr(tmp_path) -> None:
         return update
 
     result, git_host, _ = _run(tmp_path, hooks={"code_worker": sabotage})
-    assert result["outcome"] == "failed"
+    assert result["outcome"] in ("failed", "stopped_human")
     assert git_host.last_pr is None
     assert result.get("security_verdict") is not None
     assert result["security_verdict"].approved is False
+    assert any("security" in i.category for i in (result.get("issues") or []))
 
 
-def test_rework_cap_become_failed(tmp_path) -> None:
-    """Persistent test failures exhaust bounded rework ⇒ failed outcome."""
+def test_persistent_failure_reaches_stopped_human(tmp_path) -> None:
+    """T079/080/FR-015: bounded re-planning exhausts ⇒ stopped-human (exit 5)."""
     result, git_host, _ = _run(
         tmp_path,
         sandbox_results=[
@@ -141,8 +142,9 @@ def test_rework_cap_become_failed(tmp_path) -> None:
             ),
         ],
     )
-    assert result["outcome"] == "failed"
+    assert result["outcome"] == "stopped_human"
     assert git_host.last_pr is None
+    assert (result.get("replan_count") or 0) >= 1
 
 
 def test_soft_budget_never_blocks_delivery(tmp_path) -> None:
@@ -183,3 +185,25 @@ def test_resume_skips_completed_checkpoints(tmp_path) -> None:
     # A second resume run replays from checkpoints and still lands delivered.
     again = app.invoke(initial)
     assert again["outcome"] == "delivered"
+
+
+def test_transient_failure_retries_then_delivers(tmp_path) -> None:
+    """T075/FR-014: transient/infra failures are retried with backoff."""
+    from ai_factory.shared.sandbox.runner import SandboxResult
+
+    fail = SandboxResult(
+        exit_code=1, stdout="FAILED test_suite.py::test_ac_1 - docker network timeout"
+    )
+    result, git_host, _ = _run(
+        tmp_path,
+        sandbox_results=[
+            fail,
+            fail,
+            fail,
+            SandboxResult(exit_code=0, stdout="1 passed"),
+        ],
+    )
+    assert result["outcome"] == "delivered"
+    assert git_host.last_pr is not None
+    categories = [i.category for i in (result.get("issues") or [])]
+    assert any("infrastructure" in c or "third_party" in c for c in categories)

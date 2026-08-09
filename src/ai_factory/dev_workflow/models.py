@@ -2,9 +2,45 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import Literal
 
 from pydantic import BaseModel, Field
+
+
+def _utc_now() -> datetime:
+    return datetime.now(UTC)
+
+
+class RetryAttempt(BaseModel):
+    """One bounded retry of a failed step (FR-014)."""
+
+    attempt: int
+    outcome: Literal["failed", "retrying", "success"] = "retrying"
+    note: str = ""
+    timestamp: datetime = Field(default_factory=_utc_now)
+
+
+class RePlanOutcome(BaseModel):
+    """Result of an auto re-plan (FR-015)."""
+
+    success: bool
+    plan_version: int = 1
+    plan_summary: str = ""
+    error: str = ""
+
+
+class Issue(BaseModel):
+    """A classified runtime failure with its bounded handling state."""
+
+    issue_id: str
+    category: str = "logic_bug"
+    severity: Literal["critical", "high", "medium", "low"] = "low"
+    root_cause_class: str = ""
+    message: str = ""
+    retry_attempts: list[RetryAttempt] = Field(default_factory=list)
+    escalation_target: str | None = None
+    replan_outcome: RePlanOutcome | None = None
 
 
 class Budget(BaseModel):

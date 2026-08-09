@@ -27,7 +27,12 @@ from langgraph.graph import END, START, StateGraph
 
 from ai_factory.dev_workflow.code_reviewer.reviewer import review as code_review
 from ai_factory.dev_workflow.code_worker.worker import implement
-from ai_factory.dev_workflow.models import Budget
+from ai_factory.dev_workflow.issues.policy import (
+    classify_issue,
+    is_deterministic,
+    issue_retry_policy,
+)
+from ai_factory.dev_workflow.models import Budget, RetryAttempt
 from ai_factory.dev_workflow.orchestrator.budget import BudgetTracker
 from ai_factory.dev_workflow.orchestrator.orchestrator import bump_for_retry
 from ai_factory.dev_workflow.orchestrator.orchestrator import plan as plan_execution
@@ -43,6 +48,7 @@ from ai_factory.shared.telemetry.record import DevRoleInvocation, TelemetryRecor
 from ai_factory.shared.telemetry.store import FileTelemetryStore
 
 MAX_REWORK = 2
+MAX_REPLAN = 2  # bound auto re-plans before escalating to a human (T079/080)
 
 # role-name telemetry labels per graph node
 _NODE_ROLE = {
@@ -72,6 +78,12 @@ class DevState(TypedDict):
     dev_attempt: int
     overspend: bool
     error: str | None
+    issues: list
+    issue_counts: dict
+    replan_count: int
+    last_error: str | None
+    security_audit_count: int
+    replanned: bool
 
 
 def _identity(update: dict, _state: dict) -> dict:
@@ -174,7 +186,10 @@ def build_dev_graph(
 
     def code_reviewer(state: DevState) -> dict:
         verdict = code_review(state["code_product"], state["plan"], Path(state["repo"]))
-        return {"code_verdict": verdict}
+        return {
+            "code_verdict": verdict,
+            "last_error": verdict.feedback or "code review failed",
+        }
 
     def rework(state: DevState) -> dict:
         # Raise the failing role's capability one step per retry (FR-015).
@@ -186,7 +201,7 @@ def build_dev_graph(
             return "test_engineer"
         if state["dev_attempt"] < MAX_REWORK:
             return "rework"
-        return "fail"
+        return "handle_failure"
 
     def test_engineer(state: DevState) -> dict:
         product = build_test_suite(state["plan"], Path(state["repo"]))
@@ -196,23 +211,33 @@ def build_dev_graph(
         budget_tracker.charge(cost=0.001, tokens=100, time=5)
         suites = None
         result = run_tests(Path(state["repo"]), sandbox, suites=suites)  # type: ignore[arg-type]
-        return {"test_result": result}
+        return {
+            "test_result": result,
+            "last_error": ("; ".join(result.failures) or "tests failed")
+            if not result.passed
+            else "",
+        }
 
     def route_tests(state: DevState) -> str:
         if _attr(state["test_result"], "passed"):
             return "security_reviewer"
         if state["dev_attempt"] < MAX_REWORK:
             return "rework"
-        return "fail"
+        return "handle_failure"
 
     def security_reviewer(state: DevState) -> dict:
         verdict = security_review(Path(state["repo"]))
-        return {"security_verdict": verdict}
+        return {
+            "security_verdict": verdict,
+            "last_error": ("; ".join(verdict.findings) or "security review failed")
+            if not verdict.approved
+            else "",
+        }
 
     def route_security(state: DevState) -> str:
         if _attr(state["security_verdict"], "approved"):
             return "deliver"
-        return "fail"
+        return "handle_failure"
 
     def deliver(state: DevState) -> dict:
         intent = (
@@ -249,6 +274,81 @@ def build_dev_graph(
             "error": None,
         }
 
+    # ---- US3 runtime issue handling (FR-013/014/015) ------------------------
+    def handle_failure(state: DevState) -> dict:
+        """Classify the runtime failure and record a bounded Issue (FR-013)."""
+        text = state.get("last_error") or "execution failure"
+        issue = classify_issue(text)
+        counts = dict(state.get("issue_counts") or {})
+        counts[issue.category] = counts.get(issue.category, 0) + 1
+        issues = list(state.get("issues") or []) + [issue]
+        return {"issues": issues, "issue_counts": counts}
+
+    def route_failure(state: DevState) -> str:
+        issue = state["issues"][-1]
+        cat = issue.category
+        counts = (state.get("issue_counts") or {}).get(cat, 1)
+        policy = issue_retry_policy(cat)
+        if cat == "security":
+            if (state.get("security_audit_count") or 0) < policy["max_retries"]:
+                return "security_fix"
+            return "replan"
+        if counts <= policy["max_retries"]:
+            return "rework" if is_deterministic(cat) else "retry_backoff"
+        return "replan"
+
+    def retry_backoff(state: DevState) -> dict:
+        """Record an exponential-backoff retry for a transient issue (FR-014).
+
+        No real sleep: the computed backoff interval is recorded on the issue
+        for observability and test determinism.
+        """
+        issue = state["issues"][-1]
+        policy = issue_retry_policy(issue.category)
+        n = len(issue.retry_attempts)
+        issue.retry_attempts.append(
+            RetryAttempt(
+                attempt=n + 1,
+                outcome="retrying",
+                note=f"backoff {policy['backoff_seconds'] * (2**n)}s",
+            )
+        )
+        return {"issues": list(state["issues"])}
+
+    def security_fix(state: DevState) -> dict:
+        """CRITICAL security: halt, immediate fix, then full re-audit (FR-014)."""
+        return {
+            "security_audit_count": (state.get("security_audit_count") or 0) + 1,
+            "pending_security_fix": True,
+        }
+
+    def replan(state: DevState) -> dict:
+        """Auto re-plan via the Technical Planner (FR-015)."""
+        try:
+            plan = produce_plan(state["spec"])
+            return {
+                "plan": plan,
+                "replan_count": (state.get("replan_count") or 0) + 1,
+                "replanned": True,
+                "dev_attempt": 0,
+            }
+        except Exception as exc:  # noqa: BLE001
+            return {"replanned": False, "error": f"replan failed: {exc}"}
+
+    def route_replanned(state: DevState) -> str:
+        if state.get("replanned") and (state.get("replan_count") or 0) <= MAX_REPLAN:
+            return "orchestrator"
+        return "stop_human"
+
+    def stop_human(state: DevState) -> dict:
+        """Re-planning failed/limit reached: hand to a human (exit 5, FR-015)."""
+        return {
+            "outcome": "stopped_human",
+            "overspend": budget_tracker.overspend_flag,
+            "error": state.get("error") or "re-planning exhausted; human required",
+            "replanned": False,
+        }
+
     # ---- graph --------------------------------------------------------------
     g = StateGraph(DevState)
     for node_id in (
@@ -263,6 +363,11 @@ def build_dev_graph(
         "security_reviewer",
         "deliver",
         "fail",
+        "handle_failure",
+        "retry_backoff",
+        "security_fix",
+        "replan",
+        "stop_human",
     ):
         fn = {
             "load_spec": load_spec,
@@ -276,6 +381,11 @@ def build_dev_graph(
             "security_reviewer": security_reviewer,
             "deliver": deliver,
             "fail": fail,
+            "handle_failure": handle_failure,
+            "retry_backoff": retry_backoff,
+            "security_fix": security_fix,
+            "replan": replan,
+            "stop_human": stop_human,
         }[node_id]
         g.add_node(node_id, _wrap(node_id, fn))
 
@@ -292,21 +402,47 @@ def build_dev_graph(
     g.add_conditional_edges(
         "code_reviewer",
         route_reviewed,
-        {"test_engineer": "test_engineer", "rework": "rework", "fail": "fail"},
+        {
+            "test_engineer": "test_engineer",
+            "rework": "rework",
+            "handle_failure": "handle_failure",
+        },
     )
     g.add_edge("test_engineer", "test_runner")
     g.add_conditional_edges(
         "test_runner",
         route_tests,
-        {"security_reviewer": "security_reviewer", "rework": "rework", "fail": "fail"},
+        {
+            "security_reviewer": "security_reviewer",
+            "rework": "rework",
+            "handle_failure": "handle_failure",
+        },
     )
     g.add_conditional_edges(
         "security_reviewer",
         route_security,
-        {"deliver": "deliver", "fail": "fail"},
+        {"deliver": "deliver", "handle_failure": "handle_failure"},
+    )
+    g.add_conditional_edges(
+        "handle_failure",
+        route_failure,
+        {
+            "rework": "rework",
+            "retry_backoff": "retry_backoff",
+            "security_fix": "security_fix",
+            "replan": "replan",
+        },
+    )
+    g.add_edge("retry_backoff", "rework")
+    g.add_edge("security_fix", "code_worker")
+    g.add_conditional_edges(
+        "replan",
+        route_replanned,
+        {"orchestrator": "orchestrator", "stop_human": "stop_human"},
     )
     g.add_edge("deliver", END)
     g.add_edge("fail", END)
+    g.add_edge("stop_human", END)
     return g.compile()
 
 

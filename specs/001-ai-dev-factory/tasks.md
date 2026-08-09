@@ -144,23 +144,23 @@ through a CLI; the two workflows are thin CLIs that compose libraries.
 - [x] T069 [US2] Write failing test for soft budget (continue + warn + record overspend; no hard-stop) in `tests/integration/test_dev_workflow.py`
 - [x] T070 [US2] Implement soft-budget enforcement (warn + telemetry `overspend=true`; never abort on budget) in `src/ai_factory/dev_workflow/orchestrator/budget.py` (FR-019, SC-011)
 - [x] T071 [US2] Wire telemetry emission into every dev-role library CLI in `src/ai_factory/dev_workflow/*/cli.py` (US5)
-- [ ] T072 [US2] Validate US2 end-to-end against quickstart Scenarios 2, 4, 6 and mark the US2 checklist item complete
+- [x] T072 [US2] Validate US2 end-to-end against quickstart Scenarios 2, 4, 6 and mark the US2 checklist item complete
 
 ## Phase 8: User Story 3 — Issue Handling, Retry, Escalation, Re-Planning (P1)
 
 **Goal**: issues absorbed by bounded retry/escalation/re-plan; stop for a human only when re-planning fails. **Independent test**: inject a deterministic failure → routes to code-worker; inject a plan-breaking issue → re-plan without a human. Builds on US2's dev graph.
 
-- [ ] T073 [US3] Write failing test for bounded retry per issue type (deterministic → code_worker; transient/infra → exponential backoff) in `tests/integration/test_dev_workflow.py`
-- [ ] T074 [US3] Implement issue-category routing and bounded retry loops as LangGraph conditional edges in `src/ai_factory/dev_workflow/graph.py` (FR-013, FR-014)
-- [ ] T075 [US3] Write failing test for escalation to the appropriate role in `tests/integration/test_dev_workflow.py`
-- [ ] T076 [US3] Implement escalation edges (route to code_worker / technical_planner / infrastructure) in `src/ai_factory/dev_workflow/graph.py` (FR-013, FR-014)
-- [ ] T077 [US3] Write failing test that a retry/escalation limit exceeded triggers re-planning via the technical planner in `tests/integration/test_dev_workflow.py`
-- [ ] T078 [US3] Implement auto-re-plan (route back to technical_planner; produce updated TechnicalPlan + ADR if needed) in `src/ai_factory/dev_workflow/graph.py` (FR-015)
-- [ ] T079 [US3] Write failing test that the run stops for a human ONLY when re-planning fails (exit 5) in `tests/integration/test_dev_workflow.py`
-- [ ] T080 [US3] Implement the re-plan-failure stop-human path (surface impasse; preserve partial state) in `src/ai_factory/dev_workflow/graph.py` (FR-015)
-- [ ] T081 [US3] Write failing test for CRITICAL security handling (halt + immediate fix + full re-audit before merge) in `tests/integration/test_dev_workflow.py`
-- [ ] T082 [US3] Implement CRITICAL-security halt + re-audit gate in `src/ai_factory/dev_workflow/security_reviewer/reviewer.py` and `src/ai_factory/dev_workflow/graph.py` (FR-014, SC-007)
-- [ ] T083 [US3] Validate US3 against quickstart Scenario 3 and mark the US3 checklist item complete
+- [x] T073 [US3] Write failing test for bounded retry per issue type (deterministic → code_worker; transient/infra → exponential backoff) in `tests/integration/test_dev_workflow.py`
+- [x] T074 [US3] Implement issue-category routing and bounded retry loops as LangGraph conditional edges in `src/ai_factory/dev_workflow/graph.py` (FR-013, FR-014)
+- [x] T075 [US3] Write failing test for escalation to the appropriate role in `tests/integration/test_dev_workflow.py`
+- [x] T076 [US3] Implement escalation edges (route to code_worker / technical_planner / infrastructure) in `src/ai_factory/dev_workflow/graph.py` (FR-013, FR-014)
+- [x] T077 [US3] Write failing test that a retry/escalation limit exceeded triggers re-planning via the technical planner in `tests/integration/test_dev_workflow.py`
+- [x] T078 [US3] Implement auto-re-plan (route back to technical_planner; produce updated TechnicalPlan + ADR if needed) in `src/ai_factory/dev_workflow/graph.py` (FR-015)
+- [x] T079 [US3] Write failing test that the run stops for a human ONLY when re-planning fails (exit 5) in `tests/integration/test_dev_workflow.py`
+- [x] T080 [US3] Implement the re-plan-failure stop-human path (surface impasse; preserve partial state) in `src/ai_factory/dev_workflow/graph.py` (FR-015)
+- [x] T081 [US3] Write failing test for CRITICAL security handling (halt + immediate fix + full re-audit before merge) in `tests/integration/test_dev_workflow.py`
+- [x] T082 [US3] Implement CRITICAL-security halt + re-audit gate in `src/ai_factory/dev_workflow/security_reviewer/reviewer.py` and `src/ai_factory/dev_workflow/graph.py` (FR-014, SC-007)
+- [x] T083 [US3] Validate US3 against quickstart Scenario 3 and mark the US3 checklist item complete
 
 ## Phase 9: Polish & Cross-Cutting Concerns
 
