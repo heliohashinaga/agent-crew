@@ -80,3 +80,49 @@ class CheckpointStore:
 
 
 __all__ = ["CheckpointStore"]
+
+
+def allowed_msgpack_modules() -> list[tuple[str, str]]:
+    """Collect every Pydantic model in the ai_factory package (module, name).
+
+    Registered so LangGraph's msgpack serializer can deserialize our state
+    models from checkpoints without the 'unregistered type' warning (or the
+    future hard block).
+    """
+    import importlib
+    import pkgutil
+    from enum import Enum
+
+    from pydantic import BaseModel
+
+    import ai_factory as _pkg
+
+    def _is_registerable(cls) -> bool:
+        return isinstance(cls, type) and (
+            issubclass(cls, BaseModel) or issubclass(cls, Enum)
+        )
+
+    allowed: list[tuple[str, str]] = []
+    seen: set[tuple[str, str]] = set()
+    for modinfo in pkgutil.walk_packages(_pkg.__path__, prefix="ai_factory."):
+        try:
+            mod = importlib.import_module(modinfo.name)
+        except Exception:  # noqa: BLE001 - skip modules that fail to import
+            continue
+        for name, obj in vars(mod).items():
+            if _is_registerable(obj):
+                key = (modinfo.name, name)
+                if key not in seen:
+                    seen.add(key)
+                    allowed.append(key)
+    return sorted(allowed)
+
+
+def build_in_memory_checkpointer():
+    """Build a LangGraph checkpointer that round-trips our Pydantic models."""
+    from langgraph.checkpoint.memory import InMemorySaver
+    from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
+
+    return InMemorySaver(
+        serde=JsonPlusSerializer(allowed_msgpack_modules=allowed_msgpack_modules())
+    )

@@ -25,7 +25,6 @@ from __future__ import annotations
 
 from typing import TypedDict
 
-from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import interrupt
 
@@ -36,6 +35,7 @@ from ai_factory.shared.spec_store.models import (
     SpecVersion,
 )
 from ai_factory.shared.spec_store.store import FileSpecStore
+from ai_factory.shared.state.checkpointer import build_in_memory_checkpointer
 from ai_factory.spec_workflow.requirements_reviewer.reviewer import review
 from ai_factory.spec_workflow.spec_agent.agent import draft_spec
 
@@ -146,8 +146,9 @@ def build_spec_graph(store: FileSpecStore):
     g.add_edge("approve", END)
     g.add_edge("reject", END)
     g.add_edge("needs_clarification", END)
-    # InMemorySaver enables the human-in-the-loop interrupt gate (dev/tests).
-    return g.compile(checkpointer=InMemorySaver())
+    # Checkpointer enables the human-in-the-loop interrupt gate (dev/tests),
+    # with our Pydantic models registered for clean checkpoint (de)serialization.
+    return g.compile(checkpointer=build_in_memory_checkpointer())
 
 
 __all__ = ["MAX_REVIEW_ROUNDS", "SpecState", "build_spec_graph"]
