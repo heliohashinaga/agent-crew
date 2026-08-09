@@ -113,3 +113,30 @@ def test_negative_approval_never_publishes(tmp_path: pytest.TempPathFactory) -> 
         "sessions-must-expire-after-30-minutes-to-end-stale-sessions"
     )
     assert versions == []
+
+
+def test_spec_human_gate_resumes_in_place(tmp_path) -> None:
+    """T086: the spec interrupt resumes in place — no restart, one version."""
+
+    from langgraph.types import Command
+
+    store, app = _app(tmp_path)
+    cfg = {"configurable": {"thread_id": "t-resume"}}
+    initial = _init(
+        "Sessions must expire after 30 minutes to end stale sessions", "t-resume"
+    )
+
+    # First invoke pauses at the human-approval gate (FR-005) — run not finished.
+    paused = app.invoke(initial, cfg)
+    assert "__interrupt__" in paused
+    assert paused["outcome"] == "drafting"
+
+    # Resume the SAME run by answering the gate; it continues, not restarts.
+    resumed = app.invoke(Command(resume=True), cfg)
+    assert resumed["outcome"] == "approved"
+    assert resumed["spec"].approval_status == ApprovalStatus.APPROVED
+    assert resumed["spec"].spec_version_id
+
+    # Resume posted exactly one published version (no duplicates from restart).
+    versions = store.list_feature_versions(resumed["spec"].feature_slug)
+    assert len(versions) == 1
