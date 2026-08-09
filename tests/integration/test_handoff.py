@@ -8,6 +8,8 @@ guarantees around publishing.
 
 from __future__ import annotations
 
+import json
+
 import pytest
 
 from ai_factory.shared.spec_store.handoff import (
@@ -84,3 +86,61 @@ def test_dev_traceability_pairs_are_recorded(tmp_path) -> None:
     assert dev_ref["spec_version_id"]
     assert dev_ref["spec_run_id"] == "spec-run-3"
     assert load_spec_by_ref(dev_ref["spec_version_id"], store) is not None
+
+
+def test_spec_and_dev_runs_are_linked_by_reference(tmp_path, capsys) -> None:
+    """T085/FR-024+SC-017: two distinct traces joined only by a reference.
+
+    The Specification run emits an approved, versioned SpecVersion; the
+    Development run consumes that SAME spec by ``spec_version_id`` — it
+    never re-derives the requirements.
+    """
+    from ai_factory.cli.dev_run import main as dev_main
+    from ai_factory.cli.spec_run import main as spec_main
+    from ai_factory.shared.cli_util import run
+
+    spec_store = tmp_path / "specs"
+    # Trace 1: spec run approves a spec and publishes a version.
+    code = run(
+        spec_main,
+        [
+            "--request",
+            "Sessions must expire after 30 minutes to end stale sessions",
+            "--auto-approve",
+            "--store",
+            str(spec_store),
+            "--format",
+            "json",
+        ],
+    )
+    assert code == 0
+    published = SpecVersion.model_validate_json(capsys.readouterr().out)
+    assert published.approval_status == ApprovalStatus.APPROVED
+
+    # Trace 2: dev run loads by the published reference (SC-017).
+    code = run(
+        dev_main,
+        [
+            "--spec-version",
+            published.spec_version_id,
+            "--spec-store",
+            str(spec_store),
+            "--repo",
+            str(tmp_path / "repo"),
+            "--run-dir",
+            str(tmp_path / "runstate"),
+            "--sandbox",
+            "fake",
+            "--git-host",
+            "fake",
+            "--format",
+            "json",
+        ],
+    )
+    assert code == 0
+    summary = json.loads(capsys.readouterr().out)
+    assert summary["outcome"] == "delivered"
+    # Distinct traces, connected ONLY by the reference.
+    assert summary["spec_version_id"] == published.spec_version_id
+    assert summary["spec_run_id"] is not None
+    assert summary["spec_version_id"] != summary["spec_run_id"]

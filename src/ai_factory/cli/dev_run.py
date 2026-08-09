@@ -18,6 +18,7 @@ import sys
 from pathlib import Path
 
 from ai_factory.dev_workflow.graph import build_dev_graph
+from ai_factory.dev_workflow.models import Budget
 from ai_factory.shared.cli_util import (
     EXIT_DEV_FAILED,
     EXIT_ERROR,
@@ -67,6 +68,15 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--resume", action="store_true", help="Resume from completed phases (FR-020)"
     )
+    parser.add_argument(
+        "--run-id", default="", help="Stable run id (for resume across invocations)"
+    )
+    parser.add_argument(
+        "--budget-cost",
+        type=float,
+        default=None,
+        help="Soft cost budget in USD (FR-019)",
+    )
     add_output_format_arg(parser)
     return parser
 
@@ -91,10 +101,13 @@ def main(argv: list[str] | None = None) -> int:
         git_host,
         repo_root=Path(args.repo),
         run_dir=Path(args.run_dir),
+        budget=Budget(cost_usd=args.budget_cost, tokens=None, time=None)
+        if args.budget_cost is not None
+        else None,
         resume=args.resume,
     )
     initial: dict = {
-        "run_id": f"dev-run-{id(args)}",
+        "run_id": args.run_id or f"dev-run-{id(args)}",
         "spec_version_id": args.spec_version,
         "spec_run_id": f"spec-run-{id(args)}",
         "repo": args.repo,
@@ -110,6 +123,8 @@ def main(argv: list[str] | None = None) -> int:
         "spec_run_id": result.get("spec_run_id"),
         "pr": result.get("pr"),
         "error": result.get("error"),
+        "overspend": result.get("overspend"),
+        "adr": getattr(result.get("plan"), "adr", None),
     }
     write_stdout(emit(summary, args.format))
 

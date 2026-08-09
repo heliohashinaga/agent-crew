@@ -165,9 +165,9 @@ through a CLI; the two workflows are thin CLIs that compose libraries.
 ## Phase 9: Polish & Cross-Cutting Concerns
 
 - [ ] T084 [P] Add a `--format human` output path to every library CLI in `src/ai_factory/shared/cli_util.py` and `src/ai_factory/**/cli.py`
-- [ ] T085 [P] Add end-to-end integration test: spec run + dev run as two distinct traces linked by `spec_version_id`/`spec_run_id` in `tests/integration/test_handoff.py` (FR-024, SC-016, SC-017)
+- [x] T085 [P] Add end-to-end integration test: spec run + dev run as two distinct traces linked by `spec_version_id`/`spec_run_id` in `tests/integration/test_handoff.py` (FR-024, SC-016, SC-017)
 - [ ] T086 [P] Add a `--resume` end-to-end test across the spec workflow (interrupt → resume) in `tests/integration/test_spec_workflow.py` (FR-020)
-- [ ] T087 [P] Add a CI workflow (ruff + pytest unit/contract/integration) in `/home/helio/repos/ai-factory/.github/workflows/ci.yml`
+- [x] T087 [P] Add a CI workflow (ruff + pytest unit/contract/integration) in `/home/helio/repos/ai-factory/.github/workflows/ci.yml`
 - [ ] T088 [P] Add a top-level `README.md` with install (`uv sync`), the two-workflow model, and quickstart links in `/home/helio/repos/ai-factory/README.md`
 - [ ] T089 [P] Audit all library CLIs for the library-CLI convention (JSON + human output, meaningful exit codes, redaction) in `src/ai_factory/shared/cli_util.py`
-- [ ] T090 [P] Run the full quickstart suite (Scenarios 1–7) as integration tests and confirm all pass in `tests/integration/test_quickstart.py`
+- [x] T090 [P] Run the full quickstart suite (Scenarios 1–7) as integration tests and confirm all pass in `tests/integration/test_quickstart.py`
