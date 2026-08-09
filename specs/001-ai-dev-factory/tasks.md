@@ -97,13 +97,13 @@ through a CLI; the two workflows are thin CLIs that compose libraries.
 
 **Goal**: per-role model/capability-level/budget from the assessment. **Independent test**: two tasks of different complexity get different levels. Built before US2 because the dev graph needs the Orchestrator.
 
-- [ ] T035 [US4] Write failing test for the capability-level definitions (simple/standard/complex; shallow/standard/deep) and their model/budget/timeout/tool-access mapping in `tests/unit/capability_levels/test_levels.py`
-- [ ] T036 [US4] Implement the centralized capability-level mapping library in `src/ai_factory/capability_levels/levels.py` (FR-010, R9)
-- [ ] T037 [US4] Write failing contract test for the orchestrator library CLI in `tests/contract/dev_workflow/test_orchestrator_cli.py`
-- [ ] T038 [US4] Implement the orchestrator role library (pure decision layer: assessment → ExecutionPlan per role; no specialized work) in `src/ai_factory/dev_workflow/orchestrator/orchestrator.py` and `src/ai_factory/dev_workflow/orchestrator/cli.py` (FR-009)
-- [ ] T039 [US4] Write failing test that a retry-after-failure raises the capability level by ≥1 step in `tests/unit/dev_workflow/orchestrator/test_retry_leveling.py`
-- [ ] T040 [US4] Implement retry level-bump logic (raise level + add validation depth/budget on re-plan) in `src/ai_factory/dev_workflow/orchestrator/orchestrator.py` (spec User Story 4 scenario 4)
-- [ ] T041 [US4] Validate US4 against quickstart (low- vs high-complexity assessment gets different levels) and mark the US4 checklist item complete
+- [x] T035 [US4] Write failing test for the capability-level definitions (simple/standard/complex; shallow/standard/deep) and their model/budget/timeout/tool-access mapping in `tests/unit/capability_levels/test_levels.py`
+- [x] T036 [US4] Implement the centralized capability-level mapping library in `src/ai_factory/capability_levels/levels.py` (FR-010, R9)
+- [x] T037 [US4] Write failing contract test for the orchestrator library CLI in `tests/contract/dev_workflow/test_orchestrator_cli.py`
+- [x] T038 [US4] Implement the orchestrator role library (pure decision layer: assessment → ExecutionPlan per role; no specialized work) in `src/ai_factory/dev_workflow/orchestrator/orchestrator.py` and `src/ai_factory/dev_workflow/orchestrator/cli.py` (FR-009)
+- [x] T039 [US4] Write failing test that a retry-after-failure raises the capability level by ≥1 step in `tests/unit/dev_workflow/orchestrator/test_retry_leveling.py`
+- [x] T040 [US4] Implement retry level-bump logic (raise level + add validation depth/budget on re-plan) in `src/ai_factory/dev_workflow/orchestrator/orchestrator.py` (spec User Story 4 scenario 4)
+- [x] T041 [US4] Validate US4 against quickstart (low- vs high-complexity assessment gets different levels) and mark the US4 checklist item complete
 
 ## Phase 6: User Story 6 — Conditional ADRs (P3, built before US2 for the ADR path)
 
