@@ -17,7 +17,11 @@ from ai_factory.shared.cli_util import (
     write_stdout,
 )
 from ai_factory.shared.spec_store.models import FeatureRequest
+from ai_factory.shared.telemetry.record import SpecRoleInvocation, TelemetryRecord
+from ai_factory.shared.telemetry.store import FileTelemetryStore
 from ai_factory.spec_workflow.spec_agent.agent import draft_spec
+
+DEFAULT_TELEMETRY = ".factory/telemetry"
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -33,6 +37,10 @@ def build_parser() -> argparse.ArgumentParser:
         default=[],
         help="A scope constraint (repeatable)",
     )
+    parser.add_argument("--run-id", default="", help="run_id for telemetry recording")
+    parser.add_argument(
+        "--telemetry", default=DEFAULT_TELEMETRY, help="telemetry store directory"
+    )
     add_output_format_arg(parser)
     return parser
 
@@ -47,6 +55,17 @@ def main(argv: list[str] | None = None) -> int:
     request = FeatureRequest(raw_text=args.request, constraints=list(args.constraint))
     spec = draft_spec(request)
     write_stdout(emit(spec, args.format))
+
+    # FR-016/FR-017: record this role invocation for observability.
+    run_id = args.run_id or f"spec-agent-{id(request)}"
+    FileTelemetryStore(args.telemetry).add(
+        run_id,
+        SpecRoleInvocation(
+            role="spec_agent",
+            outcome="pass",
+            telemetry=TelemetryRecord(result="pass"),
+        ),
+    )
     return 0
 
 

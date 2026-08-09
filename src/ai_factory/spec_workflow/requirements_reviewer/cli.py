@@ -21,7 +21,11 @@ from ai_factory.shared.cli_util import (
     write_stdout,
 )
 from ai_factory.shared.spec_store.models import SpecVersion
+from ai_factory.shared.telemetry.record import SpecRoleInvocation, TelemetryRecord
+from ai_factory.shared.telemetry.store import FileTelemetryStore
 from ai_factory.spec_workflow.requirements_reviewer.reviewer import review
+
+DEFAULT_TELEMETRY = ".factory/telemetry"
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -30,6 +34,10 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--spec-file", required=True, help="Path to a SpecVersion JSON file"
+    )
+    parser.add_argument("--run-id", default="", help="run_id for telemetry recording")
+    parser.add_argument(
+        "--telemetry", default=DEFAULT_TELEMETRY, help="telemetry store directory"
     )
     add_output_format_arg(parser)
     return parser
@@ -51,6 +59,18 @@ def main(argv: list[str] | None = None) -> int:
 
     verdict = review(spec)
     write_stdout(emit(verdict, args.format))
+
+    # FR-016/FR-017: record this role invocation for observability.
+    run_id = args.run_id or f"requirements-reviewer-{id(spec)}"
+    FileTelemetryStore(args.telemetry).add(
+        run_id,
+        SpecRoleInvocation(
+            role="requirements_reviewer",
+            outcome="pass" if verdict.approved else "rework",
+            feedback=verdict.feedback,
+            telemetry=TelemetryRecord(result="pass" if verdict.approved else "rework"),
+        ),
+    )
     return 0 if verdict.approved else EXIT_REJECTED
 
 

@@ -97,3 +97,26 @@ def test_human_format_is_not_json(tmp_path, capsys) -> None:
     out = capsys.readouterr().out
     assert out
     assert not out.lstrip().startswith("{")
+
+
+def test_records_telemetry_for_run(tmp_path, capsys) -> None:
+    """FR-016: the role CLI records its verdict to the run's telemetry."""
+    telem = tmp_path / "telemetry"
+    code = run(
+        main,
+        [
+            "--spec-file",
+            _write(tmp_path, _approved_candidate()),
+            "--run-id",
+            "review-run",
+            "--telemetry",
+            str(telem),
+        ],
+    )
+    assert code == 0
+    from ai_factory.shared.telemetry.store import FileTelemetryStore
+
+    records = FileTelemetryStore(telem).get("review-run")
+    assert len(records) == 1
+    assert records[0]["role"] == "requirements_reviewer"
+    assert records[0]["outcome"] == "pass"

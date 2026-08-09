@@ -60,3 +60,27 @@ def test_human_format_is_not_json(capsys: pytest.CaptureFixture[str]) -> None:
 
 def test_missing_request_is_a_cli_error() -> None:
     assert run(main, []) == EXIT_ERROR
+
+
+def test_records_telemetry_for_run(
+    capsys: pytest.CaptureFixture[str], tmp_path
+) -> None:
+    """FR-016: the role CLI records a per-run invocation record."""
+    code = run(
+        main,
+        [
+            "--request",
+            "Add logout",
+            "--run-id",
+            "my-spec-run",
+            "--telemetry",
+            str(tmp_path),
+        ],
+    )
+    assert code == 0
+    from ai_factory.shared.telemetry.store import FileTelemetryStore
+
+    records = FileTelemetryStore(tmp_path).get("my-spec-run")
+    assert len(records) == 1
+    assert records[0]["role"] == "spec_agent"
+    assert records[0]["outcome"] == "pass"

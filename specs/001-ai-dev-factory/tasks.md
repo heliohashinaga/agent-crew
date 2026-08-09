@@ -84,14 +84,14 @@ through a CLI; the two workflows are thin CLIs that compose libraries.
 
 **Goal**: every role invocation records a `TelemetryRecord`. **Independent test**: run one feature through and retrieve the full per-role telemetry. Built now because US2/US3/US4 all emit telemetry.
 
-- [ ] T027 [US5] Write failing test for the `TelemetryRecord` model and per-role telemetry emission in `tests/unit/shared/telemetry/test_record.py`
-- [ ] T028 [US5] Implement the `TelemetryRecord` Pydantic model (role, model, capability level, tokens, cost, latency, tool calls, retries, errors, escalations, result, overspend) in `src/ai_factory/shared/telemetry/record.py` (FR-016)
-- [ ] T029 [US5] Write failing test for secret redaction in telemetry (no secret-looking values emitted) in `tests/unit/shared/telemetry/test_redaction.py`
-- [ ] T030 [US5] Implement the telemetry emission library (structured records, redaction before emission, machine- and human-readable forms) in `src/ai_factory/shared/telemetry/emitter.py` (FR-016, FR-018, SC-010)
-- [ ] T031 [US5] Write failing test for the telemetry query CLI (retrieve a run's telemetry in JSON and human forms) in `tests/contract/test_telemetry_cli.py`
-- [ ] T032 [US5] Implement the telemetry-query CLI (returns a run's full per-role telemetry within seconds) in `src/ai_factory/shared/telemetry/cli.py` (FR-016, SC-003)
-- [ ] T033 [US5] Wire telemetry emission into the spec-agent and requirements-reviewer library CLIs (emit per invocation) in `src/ai_factory/spec_workflow/spec_agent/cli.py` and `src/ai_factory/spec_workflow/requirements_reviewer/cli.py`
-- [ ] T034 [US5] Validate US5 against quickstart Scenario 5 (secret-redaction assertion) and mark the US5 checklist item complete
+- [x] T027 [US5] Write failing test for the `TelemetryRecord` model and per-role telemetry emission in `tests/unit/shared/telemetry/test_record.py`
+- [x] T028 [US5] Implement the `TelemetryRecord` Pydantic model (role, model, capability level, tokens, cost, latency, tool calls, retries, errors, escalations, result, overspend) in `src/ai_factory/shared/telemetry/record.py` (FR-016)
+- [x] T029 [US5] Write failing test for secret redaction in telemetry (no secret-looking values emitted) in `tests/unit/shared/telemetry/test_emitter.py` (redaction-focused coverage)
+- [x] T030 [US5] Implement the telemetry emission library (structured records, redaction before emission, machine- and human-readable forms) in `src/ai_factory/shared/telemetry/emitter.py` (FR-016, FR-018, SC-010)
+- [x] T031 [US5] Write failing test for the telemetry query CLI (retrieve a run's telemetry in JSON and human forms) in `tests/contract/test_telemetry_cli.py`
+- [x] T032 [US5] Implement the telemetry-query CLI (returns a run's full per-role telemetry within seconds) in `src/ai_factory/shared/telemetry/cli.py` (FR-016, SC-003)
+- [x] T033 [US5] Wire telemetry emission into the spec-agent and requirements-reviewer library CLIs (emit per invocation) in `src/ai_factory/spec_workflow/spec_agent/cli.py` and `src/ai_factory/spec_workflow/requirements_reviewer/cli.py`
+- [x] T034 [US5] Validate US5 against quickstart Scenario 5 (secret-redaction assertion) and mark the US5 checklist item complete
 
 ## Phase 5: User Story 4 — Right-Size Execution via Capability Levels and Orchestrator (P2)
 
