@@ -6,7 +6,7 @@
 
 **Status**: Draft
 
-**Input**: User description: "in folder docs exists the project brainstorm idea" — the reference design in `docs/ai-factory.md` describes an AI Software Development Factory with two decoupled workflows, nine stable roles, capability levels, issue handling, and automatic re-planning that delivers a pull request on a branch for the user to review and merge.
+**Input**: User description: "in folder docs exists the project brainstorm idea" — the factory has two decoupled workflows, nine stable roles, capability levels, issue handling, and automatic re-planning that delivers a pull request on a branch for the user to review and merge.
 
 ## Clarifications
 

@@ -31,7 +31,7 @@
 
 ## Notes
 
-- This spec implements the project brainstorm in `docs/ai-factory.md`:
+- This spec implements the project brainstorm (scope defined in `spec.md`):
   two decoupled workflows, nine stable roles, capability levels, issue
   handling, and automatic re-planning, delivering a pull request on a
   branch for the user to review and merge.
