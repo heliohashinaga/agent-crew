@@ -37,8 +37,8 @@
   branch for the user to review and merge.
 - Technology choices (runtime, language, pi vs LangGraph, pydantic) are
   deliberately out of scope here and deferred to planning, per the
-  WHAT/WHY-vs-HOW principle. The relevant decision docs (`docs/pi-vs-langgraph.md`,
-  `docs/pydantic-v1-decision.md`) will inform `/speckit.plan`.
+  WHAT/WHY-vs-HOW principle. The decision rationale (R1/R3 in `research.md`)
+  will inform `/speckit.plan`.
 - No [NEEDS CLARIFICATION] markers were used: the brainstorm plus
   constitution plus prior session decisions provided reasonable defaults
   for every ambiguous point, all recorded in the Assumptions section.

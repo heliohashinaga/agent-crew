@@ -5,8 +5,7 @@
 This document resolves the Technical Context unknowns and records the
 decisions, rationale, and alternatives for each technology choice and
 design question surfaced during planning. Every entry is grounded in the
-project decision notes (`docs/pi-vs-langgraph.md`,
-`docs/pydantic-v1-decision.md`) and the constitution.
+project decision history and the constitution.
 
 ---
 
@@ -31,7 +30,7 @@ workflow is a **separate `StateGraph`** — `spec_workflow/graph.py` and
   distinct top-level executions joined only by `spec_version_id`.
 
 **Alternatives considered**:
-- **Pi Agent (single runtime)**: rejected in `docs/pi-vs-langgraph.md` —
+- **Pi Agent (single runtime)**: rejected (see R1) —
   lacks robust observability and state management for this complexity, and
   would force a 4–6 week refactor to LangGraph later. Pi remains useful as
   the *interactive coding agent* that builds the factory, but is not the
@@ -50,7 +49,7 @@ metadata (`spec_version_id`, `spec_run_id`) carried on the dev run.
 
 **Rationale**:
 - LangSmith is the native observability pairing for LangGraph (R1) and is
-  recommended "from day 1" in `docs/pi-vs-langgraph.md` for tracing and evals.
+  recommended "from day 1" for tracing and evals (see R2).
 - Per-role telemetry (FR-016: role, model, capability level, tokens, cost,
   latency, tool calls, retries, errors, escalations, result) is captured
   at graph-node boundaries.
@@ -79,7 +78,7 @@ requirements (FR-024/FR-025/SC-016/SC-017 are tech-agnostic). LangSmith is a
 decision, checkpoint). Use `TypedDict`/`dict` only for non-critical,
 ephemeral, or pass-through payloads.
 
-**Rationale** (per `docs/pydantic-v1-decision.md`):
+**Rationale** (see R3):
 - `FactoryState` is complex (spec, plan, code, test results, security
   assessment, retry count, checkpoints, …); runtime validation catches
   malformed state early.

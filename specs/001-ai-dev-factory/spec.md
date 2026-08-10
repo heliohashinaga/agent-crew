@@ -585,7 +585,7 @@ ADR produced for the first and no ADR produced for the second.
   → tasks → implement, in that order, before code).
 - The runtime, language, frameworks, orchestration substrate, and
   observability backend (e.g., the pi-vs-LangGraph, pydantic, and LangSmith
-  decisions discussed in `docs/`) are implementation decisions left to
+  decisions in `research.md`) are implementation decisions left to
   planning; this specification is agnostic to them. The Specification and
   Development Workflows are two separate workflows (FR-024) regardless of
   which observability backend is chosen.

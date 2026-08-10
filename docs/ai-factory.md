@@ -816,7 +816,7 @@ LangGraph (only if real need emerges)
 ```
 
 ### ADR 01
-Decidido começar com LangGraph desde o começo (pi-vs-langgraph.md)
+Decidido começar com LangGraph desde o começo (ver research.md R1)
 
 ### Observability Stack
 ```
