@@ -21,3 +21,6 @@ htmlcov/
 
 # Local runtime data (spec stores, telemetry)
 .factory/
+
+# Local tooling (speckit/specify scaffolding)
+.specify/
