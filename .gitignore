@@ -6,6 +6,13 @@ dist/
 wheels/
 *.egg-info
 
+# Tool caches (ruff, pytest, coverage)
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
 # Virtual environments
 .venv
 
@@ -14,3 +21,6 @@ wheels/
 
 # Local runtime data (spec stores, telemetry)
 .factory/
+
+# Local tooling (speckit/specify scaffolding)
+.specify/
