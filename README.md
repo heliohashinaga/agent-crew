@@ -46,15 +46,17 @@ uv run python -m ai_factory.cli.dev_run \
   --sandbox fake --git-host fake
 ```
 
-### Exit codes
+### `dev-run` exit codes
 
 | code | meaning |
 |------|---------|
-| `0` | success (spec approved / PR delivered) |
-| `2` | spec rejected |
-| `3` | needs clarification / human deferred |
+| `0` | success — merge-ready PR delivered |
 | `4` | dev delivery failed |
 | `5` | stopped — re-planning exhausted, human required |
+
+`1` signals a CLI/usage error. The retained spec role libraries (`spec_agent`,
+`requirements_reviewer`) use `2` (review failed) / `3` (waiting on user) when
+invoked through their own CLIs.
 
 ## Documentation
 

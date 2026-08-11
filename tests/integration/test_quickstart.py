@@ -5,9 +5,10 @@ the real folder-driven entry point (``dev-run``) with fake sandbox + git host,
 plus the telemetry query and the dev graph for budget/ADR scenarios. Network
 and container-free and deterministic.
 
-Note: quickstart Scenarios 1/1b covered the `spec-run` CLI, which the folder-
-driven feature hard-removes (FR-006); the spec-production behavior they asserted
-is covered by `test_spec_workflow.py` (graph library) and `test_handoff.py`.
+Note: quickstart Scenarios 1/1b covered the `spec-run` CLI and its production
+graph entry, which the folder-driven feature hard-removes (FR-006/009); the
+spec-production behavior they asserted is covered by the spec role libraries
+tested in `tests/contract/spec_workflow/` and the handoff path in `test_handoff.py`.
 """
 
 from __future__ import annotations

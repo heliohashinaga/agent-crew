@@ -5,13 +5,15 @@ Guidance for AI coding agents working in this repository.
 ## Project
 
 The **AI Software Development Factory** turns a natural-language feature
-request into a reviewed, merge-ready pull request. It has **two independent
-workflows** — a **Specification Workflow** (what/why: request → approved,
-versioned spec) and a **Development Workflow** (how/build/prove/assess:
-approved spec folder → plan → orchestrated execution → PR). `dev-run <folder>`
-enters directly from an approved speckit spec folder; traceability derives from
-the folder feature name, not a factory-issued `spec_version_id` (the standalone
-`spec-run`/`spec-workflow` entry was removed, FR-006/009).
+request into a reviewed, merge-ready pull request. Providers contribute **spec
+role libraries** (a `spec_agent` that drafts a `SpecVersion` and a
+`requirements_reviewer` that gates it) plus a **Development Workflow**
+(how/build/prove/assess: approved spec folder → plan → orchestrated execution →
+PR). `dev-run <folder>` is the factory's sole entry point: it enters directly
+from an approved speckit spec folder; traceability derives from the folder
+feature name, not a factory-issued `spec_version_id`. The standalone
+`spec-run` entry and the `spec-workflow` production graph were removed
+(FR-006/009); the spec role libraries are retained and independently tested.
 
 Design artifacts live under `specs/001-ai-dev-factory/`:
 `spec.md`, `plan.md`, `research.md`, `data-model.md`, `contracts/`,
@@ -36,13 +38,16 @@ Design artifacts live under `specs/001-ai-dev-factory/`:
 
 ## Workflow boundary
 
-- A folder-driven `dev-run` enters directly from an approved speckit spec
-  folder (`spec.md` / `plan.md` / `tasks.md`) and runs the `dev_workflow`
-  StateGraph as a distinct observable run.
+- `dev-run <folder>` is the factory's only entry point: it enters directly from
+  an approved speckit spec folder (`spec.md` / `plan.md` / `tasks.md`) and runs
+  the `dev_workflow` StateGraph as a distinct observable run.
 - The factory never re-derives or re-clarifies requirements (FR-005); it
   consumes the approved folder as-is. Traceability identity is the folder
-  feature name (FR-011/012); the standalone `spec_workflow` entry and the
-  `spec_version_id` join key were removed (FR-006/009).
+  feature name (FR-011/012); there is no factory spec graph or
+  `spec_version_id` join key (FR-006/009). The spec role libraries
+  (`spec_workflow.spec_agent`, `spec_workflow.requirements_reviewer`) are
+  standalone libraries under `src/ai_factory/spec_workflow/` with their own
+  CLIs and contract tests — they do not form a factory production workflow.
 
 ## Conventions
 

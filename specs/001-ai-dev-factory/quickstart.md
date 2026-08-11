@@ -23,45 +23,50 @@ uv sync                       # install the factory and its libraries
 uv run pytest -q              # unit + contract + integration tests (constitution Principles III/IV)
 ```
 
-## Scenario 1 — Specification Workflow end-to-end (FR-002..006, SC-001)
+## Scenario 1 — Spec role libraries (FR-002..006, SC-001)
 
-**Goal**: a request becomes an approved, versioned spec with no code.
+The factory no longer runs a production spec workflow (FR-006/009).
+Approved speckit spec folders are authored outside the factory. The spec
+**role libraries** are exposed as standalone CLIs for tooling and tests:
 
 ```bash
-echo "Add a password-reset flow to the auth library" | \
-  uv run spec-run --request --stdin --format json
+uv run python -m ai_factory.spec_workflow.spec_agent.cli \
+  --request "Add a password-reset flow to the auth library" --format json
+uv run python -m ai_factory.spec_workflow.requirements_reviewer.cli \
+  --spec-file ./spec.json --format json
 ```
 
-**Expected outcome**:
-- Exit code `0`; stdout is a `SpecVersion` JSON with a stable
-  `spec_version_id` and `spec_run_id`.
-- The spec contains intent, rationale, testable acceptance criteria, a
-  definition of done, and ≥1 edge case (FR-003).
-- No implementation code is produced (FR-001).
-- A human approval gate was enforced before `approval_status=approved`
-  (FR-005).
-- A scope-critical ambiguity would surface as bounded clarifications
-  (FR-006); to verify, run the same with an ambiguous request and expect
-  exit code `3`.
+The libraries carry no factory console script (only `dev-run` and
+`folder-adapter` do); they are invoked as modules for tooling/tests.
 
-**Verify observability**: the spec run is a distinct top-level trace
-(FR-024, SC-016); record its `spec_run_id` for Scenario 2.
+**Expected outcome**:
+- The `spec_agent` emits a `SpecVersion` JSON with intent, rationale,
+  testable acceptance criteria, a definition of done, and ≥1 edge case
+  (FR-003).
+- The `requirements_reviewer` gates the draft; a rejection surfaces as a
+  bounded clarification (FR-005/006).
+- No implementation code is produced (FR-001).
+
+> These libraries are **not** a factory production workflow — `dev-run` is
+> the factory's sole entry point and consumes pre-approved speckit folders
+> as-is (FR-011/012).
 
 ## Scenario 2 — Dev Workflow end-to-end (FR-007..012, SC-002)
 
 **Goal**: an approved spec becomes a factory-opened PR.
 
 ```bash
-uv run dev-run --spec-version-id <id from Scenario 1> --format json
+uv run dev-run <approved-folder> --format json
 ```
 
 **Expected outcome**:
 - Exit code `0`; stdout is a `PullRequest` JSON with `auto_merged=false`,
-  `checks_status=pass`, a `pr_url`, and the same `spec_version_id`.
+  `checks_status=pass`, a `pr_url`.
 - The PR was opened by the factory on the remote git host via the host API
   (FR-022, SC-014); the factory did NOT auto-merge (FR-012).
-- The dev run consumed the spec by reference (no re-derivation) and its
-  trace carries `spec_version_id` + `spec_run_id` (FR-025, SC-017).
+- The dev run consumed the approved folder by reference (no re-derivation)
+  and its trace is identified by the folder feature name (FR-011/012,
+  FR-025, SC-017); no factory-issued `spec_version_id` join key is used.
 - No human gate interrupted the run between planning and execution
   (FR-023, SC-015).
 
@@ -86,7 +91,7 @@ the failure mid-run.
 Interrupt a Scenario 2 run (e.g., cancel mid-phase), then:
 
 ```bash
-uv run dev-run --spec-version-id <id> --resume <run_id>
+uv run dev-run <approved-folder> --resume <run_id>
 ```
 
 **Expected outcome**:
