@@ -136,6 +136,66 @@ def write_back_tasks_pr(
     )
 
 
+def clone_command(
+    source: SpecSource, *, workdir: Path, branch: str | None = None
+) -> list[str]:
+    """Build the immutable ``git clone`` argv for a source (deterministic).
+
+    ``--depth 1 --single-branch`` keeps the clone shallow; the branch is pinned
+    from the ``#branch`` fragment. Inline credentials are never placed in the
+    argv (untrusted-input & FO-018/022); the caller's existing credentials are
+    assumed present in the environment. ``-c core.askPass=false`` keeps
+    behaviour deterministic (fail instead of prompting).
+    """
+    assert_untrusted_safe(source)
+    branch = branch or source.branch or "main"
+    return [
+        "git",
+        "clone",
+        "--depth",
+        "1",
+        "--single-branch",
+        "--branch",
+        branch,
+        "-c",
+        "core.askPass=false",
+        source.url,
+        str(workdir),
+    ]
+
+
+def clone_via_sandbox(
+    source: SpecSource,
+    *,
+    git_host: GitHostClient,
+    sandbox,
+    workdir: Path,
+    run_id: str = "",
+    timeout: float = 180.0,
+) -> GitSource:
+    """Clone a git source through ``sandbox.run`` and bind a :class:`GitSource`.
+
+    Executes the deterministic clone command in a sandbox (``FakeSandbox`` in
+    tests, a real runner/container in production). If the command exits non-zero
+    (e.g. no git backend / bad credentials), :class:`GitSourceError` is raised
+    so the caller fails fast rather than silently running against an empty/local
+    folder. No credentials are embedded in the argv.
+    """
+    assert_untrusted_safe(source)
+    if source.origin != "git":
+        raise GitSourceError(f"SpecSource is not git origin: {source.origin!r}")
+    workdir.mkdir(parents=True, exist_ok=True)
+    result = sandbox.run(clone_command(source, workdir=workdir))
+    if not result.ok:
+        raise GitSourceError(
+            f"git clone failed (exit {result.exit_code}): "
+            f"{result.stderr.strip() or 'no backend/credentials'}"
+        )
+    return GitSource(
+        source=source, git_host=git_host, workdir=workdir, run_id=run_id
+    )
+
+
 __all__ = [
     "GitSource",
     "GitSourceError",
@@ -143,6 +203,8 @@ __all__ = [
     "UntrustedGitSourceError",
     "assert_untrusted_safe",
     "clone",
+    "clone_command",
+    "clone_via_sandbox",
     "head_branch_for",
     "sanitize_branch",
     "write_back_tasks_pr",

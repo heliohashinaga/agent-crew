@@ -83,3 +83,44 @@ def test_write_back_uses_pr_not_direct_push(tmp_path) -> None:
     assert pr.head == gs.head_branch
     assert pr.base == "main"
     assert "tasks.md" in pr.title or "complete" in pr.title
+
+
+def test_clone_command_is_immutable_and_untrusted_safe(tmp_path) -> None:
+    from ai_factory.shared.folder_adapter.git_source import clone_command
+
+    src = SpecSource.from_arg("git:https://github.com/acme/repo.git#dev")
+    cmd = clone_command(src, workdir=tmp_path / "dst")
+    assert cmd[:2] == ["git", "clone"]
+    assert "dev" in cmd  # pinned branch
+    assert str(tmp_path / "dst") in cmd
+    # No inline credentials, depth/single-branch + deterministic askpass.
+    assert not any("@" in c and (":" in c or "token" in c.lower()) for c in cmd)
+    assert "--depth" in cmd and "core.askPass=false" in cmd
+
+
+def test_clone_via_sandbox_runs_and_binds(tmp_path) -> None:
+    from ai_factory.shared.folder_adapter.git_source import clone_via_sandbox
+    from ai_factory.shared.sandbox.runner import FakeSandbox, SandboxResult
+
+    sandbox = FakeSandbox(SandboxResult(exit_code=0, stdout="cloned", duration=1.0))
+    src = SpecSource.from_arg("git:https://github.com/acme/repo.git#main")
+    gs = clone_via_sandbox(
+        src, git_host=FakeGitHost(), sandbox=sandbox, workdir=tmp_path
+    )
+    assert gs.source.origin == "git"
+    assert gs.head_branch.startswith("ai-factory/")
+
+
+def test_clone_via_sandbox_fails_on_nonzero(tmp_path) -> None:
+    from ai_factory.shared.folder_adapter.git_source import (
+        GitSourceError,
+        clone_via_sandbox,
+    )
+    from ai_factory.shared.sandbox.runner import FakeSandbox, SandboxResult
+
+    sandbox = FakeSandbox(SandboxResult(exit_code=128, stderr="auth failed"))
+    src = SpecSource.from_arg("git:https://github.com/acme/repo.git#main")
+    with pytest.raises(GitSourceError, match="no backend/credentials|auth failed"):
+        clone_via_sandbox(
+            src, git_host=FakeGitHost(), sandbox=sandbox, workdir=tmp_path
+        )
