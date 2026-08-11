@@ -63,14 +63,22 @@ def _safe_module(file: str) -> str:
 
 
 def _impl_subtasks(plan: TechnicalPlan) -> list:
-    # Subtasks whose files include a non-test module (skip pure test/docs steps).
+    # Only subtasks that produce implementation modules (skip test-only steps).
+    # A file is a test file when its basename is test-prefixed/suffixed or it
+    # lives under a tests/ directory, wherever it is rooted.
+    def _is_test(path: str) -> bool:
+        name = Path(path).name
+        return (
+            name.startswith("test_")
+            or name.endswith("_test.py")
+            or name == "test_suite.py"
+            or path.startswith("tests/")
+        )
+
     return [
         t
         for t in plan.subtasks
-        if any(
-            f.endswith(".py") and not f.startswith("test_") and f != "test_suite.py"
-            for f in t.files
-        )
+        if any(f.endswith(".py") and not _is_test(f) for f in t.files)
     ]
 
 
