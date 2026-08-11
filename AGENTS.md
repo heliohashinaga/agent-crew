@@ -8,9 +8,10 @@ The **AI Software Development Factory** turns a natural-language feature
 request into a reviewed, merge-ready pull request. It has **two independent
 workflows** — a **Specification Workflow** (what/why: request → approved,
 versioned spec) and a **Development Workflow** (how/build/prove/assess:
-approved spec → plan → orchestrated execution → PR). They are joined only by
-a **version reference** (`spec_version_id`): a dev run consumes an approved
-spec by reference and is traceable back to the spec run that produced it.
+approved spec folder → plan → orchestrated execution → PR). `dev-run <folder>`
+enters directly from an approved speckit spec folder; traceability derives from
+the folder feature name, not a factory-issued `spec_version_id` (the standalone
+`spec-run`/`spec-workflow` entry was removed, FR-006/009).
 
 Design artifacts live under `specs/001-ai-dev-factory/`:
 `spec.md`, `plan.md`, `research.md`, `data-model.md`, `contracts/`,
@@ -35,11 +36,13 @@ Design artifacts live under `specs/001-ai-dev-factory/`:
 
 ## Workflow boundary
 
-- `spec_workflow/` and `dev_workflow/` are separate LangGraph `StateGraph`s;
-  each is a distinct observable run.
-- The hand-off is `spec_version_id`: the spec workflow emits an approved,
-  versioned `SpecVersion`; a dev run loads it **by reference** and carries
-  `spec_version_id` + `spec_run_id` — never re-derives requirements.
+- A folder-driven `dev-run` enters directly from an approved speckit spec
+  folder (`spec.md` / `plan.md` / `tasks.md`) and runs the `dev_workflow`
+  StateGraph as a distinct observable run.
+- The factory never re-derives or re-clarifies requirements (FR-005); it
+  consumes the approved folder as-is. Traceability identity is the folder
+  feature name (FR-011/012); the standalone `spec_workflow` entry and the
+  `spec_version_id` join key were removed (FR-006/009).
 
 ## Conventions
 

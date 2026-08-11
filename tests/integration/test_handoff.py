@@ -1,9 +1,10 @@
-"""Integration test for the spec→dev hand-off seam (T024/T025, FR-025, SC-017).
+"""Integration test for the spec→dev hand-off seam (FR-006/009, SC-017).
 
-A Development run must inherit ONLY a reference (``spec_version_id`` +
-``spec_run_id``) from a Specification run and load the spec by that reference
-— never re-derive requirements. This exercises publish-by-reference and the
-guarantees around publishing.
+The `spec_version_id` single join key is removed (fr-009); a folder-driven
+`dev-run` carries no factory-issued version and its identity derives from the
+folder feature name (residual mapping, FR-006). This exercises spec-store
+publishing, by-reference loading of legacy specs, and folder-identity
+traceability.
 """
 
 from __future__ import annotations
@@ -89,42 +90,22 @@ def test_dev_traceability_pairs_are_recorded(tmp_path) -> None:
 
 
 def test_spec_and_dev_runs_are_linked_by_reference(tmp_path, capsys) -> None:
-    """T085/FR-024+SC-017: two distinct traces joined only by a reference.
+    """FR-009: the dev-run join key is the folder feature name, not a version.
 
-    The Specification run emits an approved, versioned SpecVersion; the
-    Development run consumes that SAME spec by ``spec_version_id`` — it
-    never re-derives the requirements.
+    A folder-driven ``dev-run`` consumes the speckit folder as-is and refuses
+    a ``--spec-version`` (single join key removed). Its traceability identity
+    is the folder feature name, never a factory-issued ``spec_version_id``.
     """
+    from pathlib import Path
+
     from ai_factory.cli.dev_run import main as dev_main
-    from ai_factory.cli.spec_run import main as spec_main
     from ai_factory.shared.cli_util import run
 
-    spec_store = tmp_path / "specs"
-    # Trace 1: spec run approves a spec and publishes a version.
-    code = run(
-        spec_main,
-        [
-            "--request",
-            "Sessions must expire after 30 minutes to end stale sessions",
-            "--auto-approve",
-            "--store",
-            str(spec_store),
-            "--format",
-            "json",
-        ],
-    )
-    assert code == 0
-    published = SpecVersion.model_validate_json(capsys.readouterr().out)
-    assert published.approval_status == ApprovalStatus.APPROVED
-
-    # Trace 2: dev run loads by the published reference (SC-017).
+    folder = Path(__file__).resolve().parents[1] / "fixtures" / "specs" / "full"
     code = run(
         dev_main,
         [
-            "--spec-version",
-            published.spec_version_id,
-            "--spec-store",
-            str(spec_store),
+            str(folder),
             "--repo",
             str(tmp_path / "repo"),
             "--run-dir",
@@ -140,7 +121,7 @@ def test_spec_and_dev_runs_are_linked_by_reference(tmp_path, capsys) -> None:
     assert code == 0
     summary = json.loads(capsys.readouterr().out)
     assert summary["outcome"] == "delivered"
-    # Distinct traces, connected ONLY by the reference.
-    assert summary["spec_version_id"] == published.spec_version_id
-    assert summary["spec_run_id"] is not None
-    assert summary["spec_version_id"] != summary["spec_run_id"]
+    # Identity derives from the folder feature name (FR-011/012), not a version.
+    assert summary["spec_version_id"] == "full"
+    # No separate factory-issued spec_run_id join is emitted (FR-009).
+    assert summary.get("spec_run_id") in (None, "")

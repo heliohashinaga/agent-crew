@@ -39,19 +39,18 @@ class GitHostClient(Protocol):
 class FakeGitHost:
     """Deterministic git host returning synthetic PRs (tests/dry runs)."""
 
-    _next_number = 0
-
     def __init__(self) -> None:
         self.last_pr: PullRequest | None = None
+        self._next_number = 0
 
     def open_pr(
         self, *, title: str, body: str, head: str, base: str = "main"
     ) -> PullRequest:
-        FakeGitHost._next_number += 1
+        self._next_number += 1
         pr = PullRequest(
-            number=FakeGitHost._next_number,
+            number=self._next_number,
             title=title,
-            url=f"https://fake-host.example/pr/{FakeGitHost._next_number}",
+            url=f"https://fake-host.example/pr/{self._next_number}",
             head=head,
             base=base,
         )

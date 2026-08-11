@@ -1,9 +1,13 @@
-"""Full quickstart suite (T090): Scenarios 1-7 as integration tests.
+"""Full quickstart suite (T090): Scenarios 2-7 as integration tests.
 
 Exercises the documented end-to-end paths of `specs/.../quickstart.md` using
-the real CLI entry points (``spec-run`` / ``dev-run``) with fake sandbox +
-git host, plus the telemetry query and the dev graph for budget/ADR
-scenarios. Network/container-free and deterministic.
+the real folder-driven entry point (``dev-run``) with fake sandbox + git host,
+plus the telemetry query and the dev graph for budget/ADR scenarios. Network
+and container-free and deterministic.
+
+Note: quickstart Scenarios 1/1b covered the `spec-run` CLI, which the folder-
+driven feature hard-removes (FR-006); the spec-production behavior they asserted
+is covered by `test_spec_workflow.py` (graph library) and `test_handoff.py`.
 """
 
 from __future__ import annotations
@@ -13,10 +17,8 @@ import json
 import pytest
 
 from ai_factory.cli.dev_run import main as dev_main
-from ai_factory.cli.spec_run import main as spec_main
 from ai_factory.dev_workflow.graph import build_dev_graph
 from ai_factory.shared.cli_util import (
-    EXIT_REJECTED,
     EXIT_STOPPED_HUMAN,
     run,
 )
@@ -33,13 +35,13 @@ pytestmark = pytest.mark.integration
 
 APPROVABLE = "Sessions must expire after 30 minutes to end stale sessions"
 
+# A folder fixture used for the folder-driven ``dev-run`` scenarios (US3).
+FOLDER = "tests/fixtures/specs/full"
 
-def _dev_args(tmp_path, version_id, **extra) -> list:
+
+def _dev_args(tmp_path, folder=FOLDER, **extra) -> list:
     args = [
-        "--spec-version",
-        version_id,
-        "--spec-store",
-        str(tmp_path / "specs"),
+        folder,
         "--repo",
         str(tmp_path / "repo"),
         "--run-dir",
@@ -76,72 +78,51 @@ def _published(tmp_path, intent=APPROVABLE) -> str:
 
 
 # ---- Scenario 1: spec workflow approve path --------------------------------
-def test_scenario1_spec_approved(tmp_path, capsys) -> None:
+
+# ---- Scenario 1: folder is rejected/resolved fast (FR-001/002, SC-002) ----
+def test_scenario1_missing_folder_rejected(tmp_path, capsys) -> None:
+    from ai_factory.shared.cli_util import EXIT_DEV_FAILED
+
     code = run(
-        spec_main,
+        dev_main,
         [
-            "--request",
-            APPROVABLE,
-            "--auto-approve",
-            "--store",
-            str(tmp_path / "specs"),
-            "--format",
-            "json",
+            "does-not-exist",
+            "--repo",
+            str(tmp_path / "repo"),
+            "--sandbox",
+            "fake",
+            "--git-host",
+            "fake",
         ],
     )
-    assert code == 0
-    spec = json.loads(capsys.readouterr().out)
-    assert spec["approval_status"] == "approved"
-    assert spec["human_approved"] is True
-    assert spec["spec_version_id"]
-    assert spec["acceptance_criteria"]  # FR-003
-    assert spec["definition_of_done"]
-    assert spec["edge_cases"]  # derived from the 'expire' keyword
-    assert "code" not in spec  # FR-001: no implementation code in a spec
+    # FR-007/SC-002: a missing folder is a fast-fail (exit 4), no pipeline.
+    assert code == EXIT_DEV_FAILED
 
 
-def test_scenario1b_rejected_exit2(tmp_path, capsys) -> None:
-    # A request with no derivable edge cases is rejected by the reviewer.
-    code = run(
-        spec_main,
-        [
-            "--request",
-            "Fix the dashboard colour",
-            "--auto-approve",
-            "--store",
-            str(tmp_path / "specs"),
-        ],
-    )
-    assert code == EXIT_REJECTED
-
-
-# ---- Scenario 2: dev approval -> PR delivered ------------------------------
 def test_scenario2_dev_delivers_pr(tmp_path, capsys) -> None:
-    version_id = _published(tmp_path)
-    code = run(dev_main, _dev_args(tmp_path, version_id))
+    code = run(dev_main, _dev_args(tmp_path))
     assert code == 0
     data = json.loads(capsys.readouterr().out)
     assert data["outcome"] == "delivered"
     assert data["pr"]["number"] >= 1
-    assert data["spec_version_id"] == version_id
+    # Identity derives from the folder feature name (FR-011/012), not a version.
+    assert data["spec_version_id"] == "full"
 
 
 # ---- Scenario 3: failed -> stopped-human -----------------------------------
 def test_scenario3_persistent_failure_stops_human(tmp_path, capsys) -> None:
-    version_id = _published(tmp_path)
-    code = run(dev_main, _dev_args(tmp_path, version_id, sandbox="fake-fail"))
+    code = run(dev_main, _dev_args(tmp_path, sandbox="fake-fail"))
     assert code == EXIT_STOPPED_HUMAN
 
 
 # ---- Scenario 4: resume ----------------------------------------------------
 def test_scenario4_resume_replays(tmp_path, capsys) -> None:
-    version_id = _published(tmp_path)
-    first = run(dev_main, _dev_args(tmp_path, version_id, run_id="resume-1"))
+    first = run(dev_main, _dev_args(tmp_path, run_id="resume-1"))
     assert first == 0
     capsys.readouterr()
     second = run(
         dev_main,
-        _dev_args(tmp_path, version_id, run_id="resume-1", resume=True),
+        _dev_args(tmp_path, run_id="resume-1", resume=True),
     )
     assert second == 0
     data = json.loads(capsys.readouterr().out)
@@ -173,8 +154,7 @@ def test_scenario5_telemetry_redaction(tmp_path, capsys) -> None:
 
 # ---- Scenario 6: soft budget -----------------------------------------------
 def test_scenario6_soft_budget_warns_but_delivers(tmp_path, capsys) -> None:
-    version_id = _published(tmp_path)
-    code = run(dev_main, _dev_args(tmp_path, version_id, budget_cost="0.0000001"))
+    code = run(dev_main, _dev_args(tmp_path, budget_cost="0.0000001"))
     assert code == 0  # FR-019: overspend never blocks
     data = json.loads(capsys.readouterr().out)
     assert data["outcome"] == "delivered"

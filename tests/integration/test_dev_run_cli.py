@@ -1,102 +1,63 @@
-"""Integration test for the ``dev-run`` workflow CLI (T065/T066, dev-run-cli.md).
+"""Integration test for the folder-driven ``dev-run`` workflow CLI (US1/US3).
 
-Accepts a ``spec_version_id`` (dev consumes the spec by reference, SC-017)
-and drives the pipeline to a PR. Exit codes per the contract:
+``dev-run <folder>`` resolves a speckit spec folder (no ``--spec-version`` join
+key, FR-006/009) and drives the pipeline to a PR. Exit codes per the contract:
 ``0`` delivered, ``4`` failed delivery, ``5`` stopped-human.
 """
 
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pytest
 
 from ai_factory.cli.dev_run import main
-from ai_factory.shared.cli_util import EXIT_DEV_FAILED, EXIT_STOPPED_HUMAN, run
-from ai_factory.shared.spec_store.handoff import publish_approved
-from ai_factory.shared.spec_store.models import AcceptanceCriterion, SpecVersion
-from ai_factory.shared.spec_store.store import FileSpecStore
+from ai_factory.shared.cli_util import EXIT_DEV_FAILED, EXIT_OK, EXIT_STOPPED_HUMAN, run
 
 pytestmark = pytest.mark.integration
 
+FULL = Path(__file__).resolve().parents[1] / "fixtures" / "specs" / "full"
 
-def _published_spec(tmp_path) -> str:
-    spec = SpecVersion(
-        spec_run_id="spec-run-9",
-        version=1,
-        intent="Add a binary search helper",
-        acceptance_criteria=[
-            AcceptanceCriterion(
-                statement="Search returns the index", verified_by="test"
-            )
-        ],
-        definition_of_done="done",
-        edge_cases=[],
-        approval_status="approved",
-        human_approved=True,
-    )
-    store = FileSpecStore(tmp_path / "specs")
-    return publish_approved(spec, store).spec_version_id
+
+def _args(tmp_path, **extra) -> list[str]:
+    base = [
+        str(FULL),
+        "--repo",
+        str(tmp_path / "repo"),
+        "--run-dir",
+        str(tmp_path / "runstate"),
+        "--sandbox",
+        "fake",
+        "--git-host",
+        "fake",
+    ]
+    for k, v in extra.items():
+        base += [f"--{k}", v]
+    return base
 
 
 def test_delivered_exit_zero(tmp_path, capsys: pytest.CaptureFixture[str]) -> None:
-    version_id = _published_spec(tmp_path)
-    code = run(
-        main,
-        [
-            "--spec-version",
-            version_id,
-            "--spec-store",
-            str(tmp_path / "specs"),
-            "--repo",
-            str(tmp_path / "repo"),
-            "--run-dir",
-            str(tmp_path / "runstate"),
-            "--sandbox",
-            "fake",
-            "--git-host",
-            "fake",
-        ],
-    )
-    assert code == 0
-    out = capsys.readouterr().out
-    data = json.loads(out)
+    code = run(main, _args(tmp_path))
+    assert code == EXIT_OK
+    data = json.loads(capsys.readouterr().out)
     assert data["outcome"] == "delivered"
     assert data["pr"]["number"] >= 1
-    assert data["spec_version_id"] == version_id
+    # Identity derives from the folder feature name, not a factory version (FR-011).
+    assert data["spec_version_id"] == "full"
 
 
 def test_stopped_human_after_retries(tmp_path, capsys) -> None:
-    """A spec that never passes eventually hands to a human ⇒ exit 5 (FR-015)."""
-    version_id = _published_spec(tmp_path)
-    code = run(
-        main,
-        [
-            "--spec-version",
-            version_id,
-            "--spec-store",
-            str(tmp_path / "specs"),
-            "--repo",
-            str(tmp_path / "repo"),
-            "--run-dir",
-            str(tmp_path / "runstate"),
-            "--sandbox",
-            "fake-fail",  # sandbox that always fails tests
-            "--git-host",
-            "fake",
-        ],
-    )
+    """A folder whose tests never pass eventually hands to a human ⇒ exit 5 (FR-015)."""
+    code = run(main, _args(tmp_path, sandbox="fake-fail"))
     assert code == EXIT_STOPPED_HUMAN
 
 
-def test_unknown_spec_version_exit_four(tmp_path, capsys) -> None:
+def test_unknown_folder_exit_four(tmp_path, capsys) -> None:
     code = run(
         main,
         [
-            "--spec-version",
-            "nope-v1-deadbeef",
-            "--spec-store",
-            str(tmp_path / "specs"),
+            "does-not-exist",
             "--repo",
             str(tmp_path / "repo"),
             "--sandbox",

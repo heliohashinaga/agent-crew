@@ -28,8 +28,8 @@ CLI_MODULES = [
     "ai_factory.dev_workflow.security_reviewer.cli",
     # Shared library CLIs
     "ai_factory.shared.telemetry.cli",
+    "ai_factory.shared.folder_adapter.cli",
     # Workflow CLIs
-    "ai_factory.cli.spec_run",
     "ai_factory.cli.dev_run",
 ]
 
