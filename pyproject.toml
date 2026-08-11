@@ -21,6 +21,7 @@ dependencies = [
 # spec-side tooling and tests.
 dev-run = "ai_factory.cli.dev_run:main"
 folder-adapter = "ai_factory.shared.folder_adapter.cli:main"
+ai-factory-researcher = "ai_factory.researcher.cli:main"
 
 [dependency-groups]
 dev = [

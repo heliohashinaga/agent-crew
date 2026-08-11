@@ -49,6 +49,35 @@ Design artifacts live under `specs/001-ai-dev-factory/`:
   standalone libraries under `src/ai_factory/spec_workflow/` with their own
   CLIs and contract tests — they do not form a factory production workflow.
 
+## Role libraries
+
+### `researcher` (mono-capacity lookup)
+
+The `researcher` role (`src/ai_factory/researcher/`) is a **mono-capacity,**
+**non-escalating** low-cost lookup library. It exposes
+`lookup(query, *, scope=...)` and two scopes:
+
+- **`repo`** — deterministic, **network-free** core (the default). It scans text
+  files under the given roots, matches a tokenized query against file
+  paths/names and (for small files) head contents, and returns a concise
+  `ResearchResult` (`sources` of `ResearchSource` + a `summary` that fits the
+  invoking role's context window — never a full-file dump).
+- **`web`** — **network-bound**, Option D (multi-angle best-per-angle),
+  layered on injectable collaborators
+  (`LLMProvider` / `WebFetcher` / `ContentFetcher`) in
+  `src/ai_factory/researcher/web.py`. Always integration-gated
+  (`-m integration`) and skippable when network/LLM is unavailable.
+
+`researcher` is a **fixed, non-escalating** role: it carries its own constant
+mono-capacity `ResearcherProfile` (`profile.py`) and is deliberately **not**
+part of `capability_levels.FIXED_ROLES` (no `bump_level`). Its execution
+profile is `mono` — a single fixed capacity, never escalating.
+
+The intended call site is a **library function seam**: a downstream
+planner/coder node may call `researcher.lookup(...)` to gather a concise
+summary before writing code. This pass documents that seam without wiring
+it into every planner/coder node.
+
 ## Conventions
 
 - Python ≥ 3.14, managed with `uv`; `src`-layout package `ai_factory`.
@@ -62,5 +91,6 @@ Design artifacts live under `specs/001-ai-dev-factory/`:
 
 ## Task status
 
-Current: **Phase 1 (Setup)** — project scaffolding (pyproject, package
-skeleton, test skeleton, AGENTS.md). See `tasks.md` T001–T005.
+The factory now ships the folder-driven `dev-run` workflow plus a standalone
+`researcher` mono-capacity lookup library (repo + web scopes). See the active
+feature's `specs/003-researcher/tasks.md` for the current task list.
