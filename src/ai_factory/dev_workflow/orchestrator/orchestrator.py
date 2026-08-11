@@ -25,6 +25,7 @@ from ai_factory.dev_workflow.models import (
     RetryPolicy,
     RoleAssignment,
 )
+from ai_factory.dev_workflow.technical_planner.planner import TechnicalPlan
 from ai_factory.shared.spec_store.models import SpecVersion
 
 ALL_DEV_ROLES = (
@@ -65,9 +66,8 @@ def _initial_level(role: str, complexity: str) -> str:
     return default_level(role)
 
 
-def plan(spec: SpecVersion, budget: Budget | None = None) -> ExecutionPlan:
-    """Build the per-role execution plan for ``spec`` (FR-009, FR-010)."""
-    complexity = assess(spec)
+def _build_roles(complexity: str) -> tuple[list[RoleAssignment], int]:
+    """Build per-role RoleAssignments and total token budget for a complexity."""
     roles: list[RoleAssignment] = []
     total_tokens = 0
     for role in ALL_DEV_ROLES:
@@ -91,6 +91,13 @@ def plan(spec: SpecVersion, budget: Budget | None = None) -> ExecutionPlan:
                 retry_policy=RetryPolicy(),  # replan on limit exceeded (FR-015)
             )
         )
+    return roles, total_tokens
+
+
+def plan(spec: SpecVersion, budget: Budget | None = None) -> ExecutionPlan:
+    """Build the per-role execution plan for ``spec`` (FR-009, FR-010)."""
+    complexity = assess(spec)
+    roles, total_tokens = _build_roles(complexity)
     return ExecutionPlan(
         spec_version_id=spec.spec_version_id,
         complexity=complexity,
@@ -100,6 +107,29 @@ def plan(spec: SpecVersion, budget: Budget | None = None) -> ExecutionPlan:
             tokens=total_tokens, cost_usd=sum(r.budget.cost_usd or 0 for r in roles)
         ),
         note=f"assessed complexity={complexity}",
+    )
+
+
+def plan_from_technical_plan(
+    plan: TechnicalPlan, budget: Budget | None = None
+) -> ExecutionPlan:
+    """Build an ExecutionPlan from a folder-adapter TechnicalPlan (US-1).
+
+    The complexity/security assessment is already imported from ``plan.md``; we
+    delegate role assignment to the same logic as :func:`plan`. The folder
+    feature name becomes the plan identity (FR-011/012).
+    """
+    complexity = plan.assessment.complexity
+    roles, total_tokens = _build_roles(complexity)
+    return ExecutionPlan(
+        spec_version_id=plan.spec_version_id or "folder",
+        complexity=complexity,
+        roles=roles,
+        budget_total=budget
+        or Budget(
+            tokens=total_tokens, cost_usd=sum(r.budget.cost_usd or 0 for r in roles)
+        ),
+        note=f"folder-driven; imported complexity={complexity}",
     )
 
 
@@ -133,4 +163,10 @@ def bump_for_retry(plan: ExecutionPlan, role: str, step: int = 1) -> ExecutionPl
     )
 
 
-__all__ = ["ALL_DEV_ROLES", "assess", "bump_for_retry", "plan"]
+__all__ = [
+    "ALL_DEV_ROLES",
+    "assess",
+    "bump_for_retry",
+    "plan",
+    "plan_from_technical_plan",
+]

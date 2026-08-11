@@ -72,6 +72,11 @@ class TechnicalSubtask(BaseModel):
     description: str
     files: list[str] = Field(default_factory=list)
     acceptance_criteria: list[str] = Field(default_factory=list)
+    # Upstream speckit task provenance (folder-adapter, FR-003/010/013).
+    source_task_id: str = ""
+    source_task_type: str = ""
+    # Whether tests.md marked the task done ("- [x] T###", FR-014a).
+    completed: bool = False
 
 
 class TechnicalPlan(BaseModel):

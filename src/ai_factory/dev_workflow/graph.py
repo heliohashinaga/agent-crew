@@ -34,7 +34,10 @@ from ai_factory.dev_workflow.issues.policy import (
 )
 from ai_factory.dev_workflow.models import Budget, RetryAttempt
 from ai_factory.dev_workflow.orchestrator.budget import BudgetTracker
-from ai_factory.dev_workflow.orchestrator.orchestrator import bump_for_retry
+from ai_factory.dev_workflow.orchestrator.orchestrator import (
+    bump_for_retry,
+    plan_from_technical_plan,
+)
 from ai_factory.dev_workflow.orchestrator.orchestrator import plan as plan_execution
 from ai_factory.dev_workflow.security_reviewer.reviewer import review as security_review
 from ai_factory.dev_workflow.technical_planner.planner import produce_plan
@@ -52,12 +55,20 @@ MAX_REPLAN = 2  # bound auto re-plans before escalating to a human (T079/080)
 
 # role-name telemetry labels per graph node
 _NODE_ROLE = {
+    "technical_planner": "technical_planner",
+    "orchestrator": "orchestrator",
     "code_worker": "code_worker",
     "code_reviewer": "code_reviewer",
+    "test_engineer": "test_engineer",
     "test_runner": "test_runner",
     "security_reviewer": "security_reviewer",
     "deliver": "orchestrator",
 }
+
+# Dev roles that carry a valid `DevRoleInvocation.role` literal. Any node not
+# in this set (e.g. `load_spec`, `fail`, `handle_failure`) is a control-flow
+# node, not a capability; ``_telemetry`` skips it (FR-015).
+_VALID_DEV_ROLES = frozenset(_NODE_ROLE.values())
 
 
 class DevState(TypedDict):
@@ -120,6 +131,10 @@ def build_dev_graph(
         if telemetry_store is None:
             return
         role = _NODE_ROLE.get(node_id, node_id)
+        if role not in _VALID_DEV_ROLES:
+            # control-flow node (load_spec/fail/handle_failure): no capability
+            # telemetry.
+            return
         ok = result.get("outcome") not in ("failed",) and not (
             isinstance(result.get("code_verdict"), object)
             and getattr(result.get("code_verdict"), "approved", True) is False
@@ -163,6 +178,9 @@ def build_dev_graph(
 
     # ---- node bodies -------------------------------------------------------
     def load_spec(state: DevState) -> dict:
+        if state.get("plan") is not None:
+            # Folder-driven run: the TechnicalPlan was injected at the start.
+            return {}
         spec = load_spec_by_ref(state["spec_version_id"], spec_store)
         if spec is None:
             return {
@@ -172,13 +190,19 @@ def build_dev_graph(
         return {"spec": spec}
 
     def route_loaded(state: DevState) -> str:
+        if state.get("plan") is not None:
+            return "orchestrator"
         return "planner" if state.get("spec") is not None else "fail"
 
     def planner(state: DevState) -> dict:
         return {"plan": produce_plan(state["spec"])}
 
     def orchestrator(state: DevState) -> dict:
-        return {"exec_plan": plan_execution(state["spec"], budget or Budget())}
+        if state.get("spec") is not None:
+            return {"exec_plan": plan_execution(state["spec"], budget or Budget())}
+        return {
+            "exec_plan": plan_from_technical_plan(state["plan"], budget or Budget())
+        }
 
     def code_worker(state: DevState) -> dict:
         product = implement(state["plan"], Path(state["repo"]))
@@ -240,15 +264,19 @@ def build_dev_graph(
         return "handle_failure"
 
     def deliver(state: DevState) -> dict:
-        intent = (
-            state["spec"].intent[:60] if state["spec"] else state["spec_version_id"]
-        )
+        spec = state.get("spec")
+        intent = spec.intent[:60] if spec else state.get("spec_version_id", "")
         adr_line = ""
         if state["plan"] is not None and state["plan"].adr is not None:
             adr_line = f"\nADR: {state['plan'].adr.title}"
+        run_ref = (
+            f" (from {state['spec_run_id']})"
+            if state.get("spec_run_id")
+            else ""
+        )
         body = (
-            f"AI Factory delivery for spec {state['spec_version_id']} "
-            f"(from {state['spec_run_id']}).\n"
+            f"AI Factory delivery for folder {state['spec_version_id']}"
+            f"{run_ref}.\n"
             f"Goal: {intent}{adr_line}\n"
             "Test result: "
             f"{'passed' if _attr(state['test_result'], 'passed') else 'failed'}\n"
@@ -325,7 +353,11 @@ def build_dev_graph(
     def replan(state: DevState) -> dict:
         """Auto re-plan via the Technical Planner (FR-015)."""
         try:
-            plan = produce_plan(state["spec"])
+            plan = (
+                produce_plan(state["spec"])
+                if state.get("spec") is not None
+                else state["plan"]
+            )
             return {
                 "plan": plan,
                 "replan_count": (state.get("replan_count") or 0) + 1,
@@ -393,7 +425,7 @@ def build_dev_graph(
     g.add_conditional_edges(
         "load_spec",
         route_loaded,
-        {"planner": "planner", "fail": "fail"},
+        {"planner": "planner", "orchestrator": "orchestrator", "fail": "fail"},
     )
     g.add_edge("planner", "orchestrator")
     g.add_edge("orchestrator", "code_worker")
