@@ -8,5 +8,22 @@ sourced :class:`~ai_factory.researcher.models.ResearchResult`.
 
 from ai_factory.researcher.agent import ResearcherWebError, lookup
 from ai_factory.researcher.models import ResearchResult, ResearchSource
+from ai_factory.researcher.profile import (
+    MAX_ANGLES,
+    MIN_ANGLES,
+    RESEARCHER_PROFILE,
+    RESEARCHER_ROLE,
+    ResearcherProfile,
+)
 
-__all__ = ["lookup", "ResearchResult", "ResearchSource", "ResearcherWebError"]
+__all__ = [
+    "lookup",
+    "ResearchResult",
+    "ResearchSource",
+    "ResearcherWebError",
+    "RESEARCHER_PROFILE",
+    "RESEARCHER_ROLE",
+    "ResearcherProfile",
+    "MIN_ANGLES",
+    "MAX_ANGLES",
+]

@@ -6,8 +6,9 @@ matches a tokenized query against file paths/names and (for small files) head
 contents, and returns a concise ``ResearchResult``.
 
 The ``web`` scope (Option D, multi-angle best-per-angle) is layered on
-injectable collaborators and is out of scope for this module's deterministic
-core; requesting it without collaborators raises :class:`ResearcherWebError`.
+injectable collaborators (``llm`` / ``fetcher`` / ``content_fetcher``) and is
+implemented in :mod:`ai_factory.researcher.web`. Requesting it without the
+required collaborators raises :class:`ResearcherWebError`.
 """
 
 from __future__ import annotations
@@ -141,6 +142,22 @@ def lookup(
     if "web" in used_scopes and (llm is None or fetcher is None):
         raise ResearcherWebError(
             "web scope requires injected llm + fetcher (+ optional content_fetcher)"
+        )
+
+    if used_scopes == ["web"]:
+        # Delegate entirely to the web core (Option D, best-per-angle).
+        from ai_factory.researcher.web import web_lookup
+
+        return web_lookup(
+            query,
+            llm=llm,  # type: ignore[arg-type]
+            fetcher=fetcher,  # type: ignore[arg-type]
+            content_fetcher=content_fetcher,  # type: ignore[arg-type]
+        )
+
+    if "web" in used_scopes:
+        raise ResearcherWebError(
+            "web scope cannot be combined with repo scope in a single lookup"
         )
 
     sources: list[ResearchSource] = []

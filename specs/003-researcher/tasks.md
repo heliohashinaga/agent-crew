@@ -63,7 +63,7 @@
       contain a verbatim full-file dump (aligns FR-002/SC-001 and
       `test_lookup_summary_is_concise_not_a_dump`); a large matched file is bounded
       and its source sets `truncated=True`. No new public API.
-- [ ] **T014 — Deterministic `web` core (Option D) with injected fakes [Red→Green]** —
+- [x] **T014 — Deterministic `web` core (Option D) with injected fakes [Red→Green]** —
       `src/ai_factory/researcher/agent.py` (and `web.py`): the `web` scope runs
       **multi-angle queries** (2–4 angles) → **rank** candidates by source quality
       via `LLMProvider` (**best-per-angle**) → **fetch content** of the selected URLs
@@ -75,7 +75,7 @@
       `FakeContentFetcher` assert (a) `scope=web` yields best-per-angle (varied) URL
       `sources` + an LLM-summarized concise `summary`, (b) fetcher/provider failure raises
       `ResearcherWebError` — all deterministic and network-free.
-- [ ] **T015 — Real network/LLM `web` path (integration) [Red→Green]** —
+- [x] **T015 — Real network/LLM `web` path (integration) [Red→Green]** —
       `src/ai_factory/researcher/web.py`: real `WebFetcher` + `ContentFetcher` + a
       real `LLMProvider` wired to the `web` scope. **Red**: integration tests under
       `-m integration` assert a best-effort real fetch+summarize returns
@@ -108,7 +108,7 @@
 
 ### User Story 3 - Define the researcher mono-capacity profile
 
-- [ ] **T030 — Define constant execution profile for `researcher` [Red→Green]** —
+- [x] **T030 — Define constant execution profile for `researcher` [Red→Green]** —
       In `src/ai_factory/researcher/` (e.g. `profile.py`): define a **constant,
       non-escalating** execution profile for `researcher` (a typed object/constant:
       logical model, limits). This profile lives in the researcher library AND is
@@ -129,24 +129,31 @@
 - [x] **T040 — Wire telemetry into `lookup`/CLI [Green]** — The deterministic core
       and CLI optionally record telemetry; no new public API. Ensure invariants hold
       and tests remain green.
-- [ ] **T041 — Docs**: Add `researcher` to `AGENTS.md` role list and a short section
+- [x] **T041 — Docs**: Add `researcher` to `AGENTS.md` role list and a short section
       / example in `README.md` (and `quickstart.md` of this feature). Document the
       intended StateGraph call site (library function seam) without wiring it into
       every planner/coder node in this pass.
-- [ ] **T042 — Full suite Green + Ruff** — `uv run ruff check .` clean; `uv run
+- [x] **T042 — Full suite Green + Ruff** — `uv run ruff check .` clean; `uv run
       pytest -q` (unit+contract) all pass with **no network**; web-scope integration
       tests gated `-m integration` pass when network is available.
 
 ## Acceptance Handoff
 
-- [ ] **T050 — Against the worked example** — A `repo` lookup for
+- [x] **T050 — Against the worked example** — A `repo` lookup for
       "login authentication password" against a micro auth repo returns a
-      `ResearchResult` whose `sources` include `service.py` and a concise
-      `summary` (fits the invoking role's context window, no full-file dump)
-      — matching US1 / SC-001.
-- [ ] **T051 — Boundary check** — Empty query, missing `--query`, missing/invalid
+      `ResearchResult` whose `sources` include `service.py` (and a concise
+      `summary` — no full-file dump) — matching US1 / SC-001. Verified end-to-end
+      via `ai_factory.researcher.cli`.
+- [x] **T051 — Boundary check** — Empty query, missing `--query`, missing/invalid
       root, binary/noise skip, and `web` scope network/unreachable failure: all
       handled (empty result or clear non-zero error, never silent empty).
-- [ ] **T052 — Deep review** — Read-only review of the diff verifying Library-First
-      (workflows never depend on researcher); the deterministic `repo` core has no
-      network, and `web` is network-bound/integration-gated; approve merge.
+      Verified via unit/contract/integration tests and CLI probes: missing/empty
+      `--query` → exit 1; invalid root → empty result (exit 0, no crash);
+      empty query at library → empty result; web missing collaborators → clear
+      `ResearcherWebError`; unreachable endpoint → typed error.
+- [x] **T052 — Deep review** — Read-only review of the diff verifying Library-First
+      (workflows never depend on researcher: no import of `ai_factory.researcher`
+      outside the researcher package), the deterministic `repo` core has no
+      network (`agent.py` has zero network calls), and `web` is network-bound
+      (urllib only inside `Urllib*Fetcher`) / integration-gated and skippable;
+      approve merge.
