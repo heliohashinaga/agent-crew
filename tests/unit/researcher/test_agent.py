@@ -1,6 +1,6 @@
 """Unit tests for the researcher role core (deterministic, network-free).
 
-The researcher is a low-cost lookup role (fixed ``fast-cheap``) used by the
+The researcher is a mono-capacity, fixed lookup role used by the
 planner/coder/tester to query the repository for context and receive a
 **concise summary** instead of loading whole files into the invoking role's
 context (Library-First, deterministic core, no network).
@@ -8,7 +8,7 @@ context (Library-First, deterministic core, no network).
 
 from __future__ import annotations
 
-import pytest
+from pathlib import Path
 
 from ai_factory.researcher.agent import lookup
 from ai_factory.researcher.models import ResearchResult
@@ -87,7 +87,7 @@ def test_lookup_summary_is_concise_not_a_dump(tmp_path) -> None:
     """Summary is concise and does not dump whole file content (fits context)."""
     root, login = _mini_repo(tmp_path)
     res = lookup("login password token", roots=[root])
-    full_login = open(login, "r", encoding="utf-8").read()
+    full_login = Path(login).read_text(encoding="utf-8")
     # The summary is prose, not a verbatim replica of a matched source file.
     assert res.summary
     assert full_login.strip() not in res.summary

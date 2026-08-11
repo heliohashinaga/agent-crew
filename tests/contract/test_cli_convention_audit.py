@@ -31,6 +31,8 @@ CLI_MODULES = [
     "ai_factory.shared.folder_adapter.cli",
     # Workflow CLIs
     "ai_factory.cli.dev_run",
+    # Researcher (mono-capacity lookup role)
+    "ai_factory.researcher.cli",
 ]
 
 

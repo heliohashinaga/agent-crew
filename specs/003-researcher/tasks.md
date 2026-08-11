@@ -18,17 +18,17 @@
 - [x] **T001 — Specify & approve** — Author this feature spec
       (`specs/003-researcher/spec.md`), research notes (`research.md`), and task
       list (`tasks.md`). Approved by user before implementation begins.
-- [ ] **T002 — Scaffold `researcher` package [Red→Green]** — Create package
+- [x] **T002 — Scaffold `researcher` package [Red→Green]** — Create package
       skeleton `src/ai_factory/researcher/__init__.py`, `models.py`, `agent.py`,
       `cli.py` (empty imports only). Add `tests/unit/researcher/` and
       `tests/contract/researcher/`. **Red**: a smoke test importing
       `ai_factory.researcher.agent` and `.models` fails to collect.
-- [ ] **T003 — Define `ResearchSource` model [Red→Green]** —
+- [x] **T003 — Define `ResearchSource` model [Red→Green]** —
       `src/ai_factory/researcher/models.py`. Fields: `path: str`, `lines: str|None = None`
       (range like `"14-40"`), `snippet: str|None = None`, `truncated: bool = False`.
       **Red**: unit test builds and round-trips a `ResearchSource` via
       `model_validate_json`.
-- [ ] **T004 — Define `ResearchResult` model [Red→Green]** —
+- [x] **T004 — Define `ResearchResult` model [Red→Green]** —
       `src/ai_factory/researcher/models.py`. Fields: `role: str = "researcher"`,
       `query: str`, `summary: str = ""`, `sources: list[ResearchSource] = []`,
       `scopes_used: list[str] = ["repo"]`, plus telemetry/observability ancillaries
@@ -39,7 +39,7 @@
 
 ### User Story 1 - Query the Repository for Context (repo scope)
 
-- [ ] **T010 — Deterministic `lookup(query, *, roots)` core [Red→Green]** —
+- [x] **T010 — Deterministic `lookup(query, *, roots)` core [Red→Green]** —
       `src/ai_factory/researcher/agent.py`. For `repo` scope: scan text files under
       `roots` (recursively), skip non-text/binary files and noise dirs
       (`.git`, `.venv`, `node_modules`, caches); match a tokenized query against
@@ -49,14 +49,14 @@
       network. **Red**: tests in `tests/unit/researcher/test_agent.py` — return a
       deterministic result, default scope `["repo"]`, empty-query is an empty result,
       unrelated dirs ignored, summary stays concise (fits context window).
-- [ ] **T011 — Empty query / no-match behavior [Red→Green]** — A query with no
+- [x] **T011 — Empty query / no-match behavior [Red→Green]** — A query with no
       matching files returns empty `sources` and empty `summary` (not an error);
       empty query is also an empty result. **Red**: tests assert empty result shape.
-- [ ] **T012 — Skip binary + noise + cap large files [Red→Green]** — Binary/non-UTF8
+- [x] **T012 — Skip binary + noise + cap large files [Red→Green]** — Binary/non-UTF8
       files and common noise dirs are skipped; large files are bounded (head/tail or
       token cap) and the matching source sets `truncated=True`. **Red**: tests with a
       binary blob, a noise dir, and a large file assert correct skip/truncation.
-- [ ] **T013 — Conciseness invariant [Green]** — Add an internal implementation constant
+- [x] **T013 — Conciseness invariant [Green]** — Add an internal implementation constant
       (e.g. a summary-length cap and a per-file read bound) to keep the generated
       summary **concise** — held as code detail, **not** specified numerically in the
       spec (qualitative, context-window). Concrete assertion: the summary MUST NOT
@@ -86,17 +86,17 @@
 
 ### User Story 2 - Expose a Library-First CLI
 
-- [ ] **T020 — `ai-factory-researcher` CLI parser [Red→Green]** —
+- [x] **T020 — `ai-factory-researcher` CLI parser [Red→Green]** —
       `src/ai_factory/researcher/cli.py`. `--query` (required), `--roots`
       (repeatable / comma), `--scope {repo,web}` (default `repo`), `--output-format
       {json,human}` via `add_output_format_arg`, reuse `run`/`emit`/`write_stdout`.
       **Red**: contract test asserts usage error (non-zero) when `--query` is missing.
-- [ ] **T021 — `repo` scope stdout → valid JSON + diagnostics to stderr [Red→Green]** —
+- [x] **T021 — `repo` scope stdout → valid JSON + diagnostics to stderr [Red→Green]** —
       Calling the CLI with `--scope repo --query "..." --roots <tmp>` prints valid JSON
       `ResearchResult` to stdout (parses via `ResearchResult.model_validate_json`,
       `role=="researcher"`, correct `sources`), diagnostics to stderr, exit `0`.
       **Red**: contract CLI test drives `run(main, [...])` with `capsys`.
-- [ ] **T022 — Human-readable output + `web` scope CLI [Red→Green]** —
+- [x] **T022 — Human-readable output + `web` scope CLI [Red→Green]** —
       `--output-format human` prints a readable brief; `--scope web` calls the same
       `ResearchResult` interface (web core from Phase 2) and prints the web `sources`
       (URLs) to stdout; on a network/unreachable error it exits non-zero with a clear
@@ -117,7 +117,7 @@
       `security` (no `bump_level`). **Red**: unit test asserts `researcher` exposes
       a constant mono-capacity profile and that `researcher` is NOT in
       `capability_levels.FIXED_ROLES`.
-- [ ] **T031 — Telemetry record for researcher [Red→Green]** — Add `"researcher"` to
+- [x] **T031 — Telemetry record for researcher [Red→Green]** — Add `"researcher"` to
       the `DevRole`/role literal (or a dedicated role union) in
       `src/ai_factory/shared/telemetry/record.py`. Emit a `TelemetryRecord` per lookup
       with `role=="researcher"`, its fixed profile model, tokens, cost, latency,
@@ -126,7 +126,7 @@
 
 ## Phase 5 — Polish, Docs & Full Green
 
-- [ ] **T040 — Wire telemetry into `lookup`/CLI [Green]** — The deterministic core
+- [x] **T040 — Wire telemetry into `lookup`/CLI [Green]** — The deterministic core
       and CLI optionally record telemetry; no new public API. Ensure invariants hold
       and tests remain green.
 - [ ] **T041 — Docs**: Add `researcher` to `AGENTS.md` role list and a short section
