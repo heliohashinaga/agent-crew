@@ -68,12 +68,22 @@ cell is a provider-prefixed model id.
 - `resolve_model_id(role, level)`:
   1. **env override** (flattened by level): `MODEL_FAST_CHEAP`/`MODEL_CAPABLE`/`MODEL_DEEP`
      win for the matching level label, regardless of role (documented).
-  2. else **`model-map.json`**: `roles[role][level]`.
+  2. else **`model-map.json`**: `roles[role][level]` (precise per-role config).
+   ...
+- **env overrides are flattened by LEVEL** (`MODEL_FAST_CHEAP`/`MODEL_CAPABLE`/
+  `MODEL_DEEP`): they apply to any role at that level label and do **not**
+  distinguish role or axis (e.g. `MODEL_DEEP` affects both `code_reviewer` deep
+  and any `deep`-mapped task). For role-precise selection use `model-map.json`.
+  Per-role env overrides (`MODEL_<ROLE>_<LEVEL>`) are out of scope for v1.
   3. else **code defaults** (most specific available).
   4. missing role/level/model → fall back to `MODEL_DEFAULT`/`default`.
 - Precedence overall: **code defaults < `model-map.json` < env**.
 - Unknown role/level or empty/garbage id → **fail-closed** in live mode (use the
   deterministic path or raise a clear error), never dispatch with a bad id.
+- **Concrete default ids**: the defaults are provider-dependent — T010 pins the
+  concrete provider-prefixed ids (e.g. an opencode-go flash/pro/deep class for
+  each axis) used by tests and by `MODEL_*` fallback. Documented as the
+  authoritative defaults; operators override per deploy via JSON/env.
 
 The dispatcher parses the model-id prefix (`opencode-go`/`openrouter`), selects
 the matching key (`OPENCODE_GO_API_KEY`/`OPENROUTER_API_KEY`) and base URL, then
