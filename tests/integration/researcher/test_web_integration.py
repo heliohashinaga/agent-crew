@@ -36,8 +36,12 @@ def _network_available() -> bool:
         return False
 
 
+# ``live`` marks the real-network path so deterministic CI jobs (which run
+# ``integration and not live``) stay hermetic; this file only runs in the
+# opt-in ``-m live`` job and locally, and skips when offline.
 pytestmark = [
     pytest.mark.integration,
+    pytest.mark.live,
     pytest.mark.skipif(
         not _network_available(), reason="network unavailable; skipping real web path"
     ),
