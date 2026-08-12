@@ -54,4 +54,5 @@ markers = [
     "unit: fast unit tests, no network access",
     "contract: tests of the library-CLI contract seams",
     "integration: end-to-end workflow tests (network + container)",
+    "live: real network tests that intentionally leave the hermetic sandbox (best-effort; excluded from deterministic CI runs)",
 ]

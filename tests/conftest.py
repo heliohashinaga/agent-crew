@@ -23,7 +23,7 @@ def _block_network(
     request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Block outbound network access unless the test is marked ``integration``."""
-    if "integration" in request.keywords:
+    if "integration" in request.keywords or "live" in request.keywords:
         yield
         return
 
