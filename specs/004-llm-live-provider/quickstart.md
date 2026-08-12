@@ -84,7 +84,7 @@ export MODEL_DEEP="opencode-go/kimi-k3"
 # or instead: commit a model-map.json with the same mapping (no secrets)
 ```
 
-**Expected**: a `fast-cheap` role uses the config'd fast id (opencode-go), `capable`
+**Expected**: a `code_worker`→`simple` role uses the config'd fast id (opencode-go), `capable`
 the config'd id (openrouter — mixing providers), `deep` its own; unknown level falls
 back to `MODEL_DEFAULT`. Precedence code `< JSON < env. Verified by unit test
 (`test_model_map.py`) with a stubbed transport (offline).
@@ -92,7 +92,7 @@ back to `MODEL_DEFAULT`. Precedence code `< JSON < env. Verified by unit test
 ## Cross-references
 
 - **Data model**: [data-model.md](./data-model.md) → `OpenAICompatibleProvider`,
-  `PerCapabilityModelMap`, `LLMResult`.
+  `PerRoleCapabilityModelMap`, `LLMResult`.
 - **Contracts**: [provider](./contracts/openai-compatible-provider.md) and
   [model map](./contracts/model-map.md).
 - **Implementation**: [tasks.md](./tasks.md) — T002..T024 (unit), T040 (integration).

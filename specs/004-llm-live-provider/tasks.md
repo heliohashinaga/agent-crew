@@ -60,21 +60,24 @@
       test asserts an HTTP error containing the key in the body surfaces
       `OpenAICompatibleError` with `[REDACTED]` and no leaked key.
 
-## Phase 2 — Per-Capability-Level Model Map (FR-010)
+## Phase 2 — Per-Role Capability-Level Model Map (FR-010)
 
-> Maps the nominal `RoleAssignment.model` labels (`fast-cheap`/`capable`/`deep`)
-> to real model ids, env-overridable. Reused by the dual-mode executor.
+> Maps each (role, level) pair (task `simple`/`standard`/`complex`; review
+> `shallow`/`standard`/`deep`) to real, provider-prefixed model ids via code
+> defaults < `model-map.json` < env. Reused by the dual-mode executor.
 
 ### User Story 4 (supporting) - Resolve model id per capability level
 
 - [ ] **T010 — `model_map.py` with defaults + JSON + env override [Red→Green]** — Add
       `src/ai_factory/capability_levels/model_map.py`: a function
-      `resolve_model_id(level: str) -> str` returning a documented default real
-      model id (provider-prefixed) for `fast-cheap`/`capable`/`deep`, resolved with
-      precedence **code defaults < `model-map.json` < env** (`MODEL_FAST_CHEAP`/`MODEL_CAPABLE`/
-      `MODEL_DEEP`, with `MODEL_DEFAULT` fallback). Both providers (opencode-go/openrouter) usable
-      simultaneously via the model-id prefix. **Red**: unit tests assert defaults,
-      `model-map.json` override, env override, and unknown-level fallback.
+      `resolve_model_id(role: str, level: str) -> str` returning a documented
+      default, provider-prefixed model id, resolved with precedence
+      **code defaults < `model-map.json` (nested role→level→id) < env**
+      (`MODEL_FAST_CHEAP`/`MODEL_CAPABLE`/`MODEL_DEEP`, with `MODEL_DEFAULT`
+      fallback). Both axes (`simple/standard/complex` task, `shallow/standard/deep`
+      review) and both providers (opencode-go/openrouter, simultaneously) covered.
+      **Red**: unit tests assert code defaults, `model-map.json` override, env
+      override, and unknown role/level fallback.
 
 ## Phase 3 — Dual-Mode Role Executor (US3/US4, FR-009)
 
@@ -89,10 +92,11 @@
       functions (e.g. `code_worker.worker.implement`) — behavior **identical to
       today**, no network, no creds required. **Live** (opt-in `AI_FACTORY_LIVE=1`
       / `--live`): resolve the role's real model id (via
-      `model_map.resolve_model_id` on its `RoleAssignment.capability_level`) and
-      dispatch through the registered provider. **Red**: unit test — offline mode
-      with network blocked produces the same deterministic output; live mode with a
-      **stubbed transport** calls `provider.complete` with the correct model id.
+      `model_map.resolve_model_id(role, level)` on the role and its
+      `RoleAssignment.capability_level`) and dispatch through the registered
+      provider. **Red**: unit test — offline mode with network blocked produces
+      the same deterministic output; live mode with a **stubbed transport** calls
+      `provider.complete` with the correct model id for the role+level.
 - [ ] **T021 — Opt-in gate: creds alone never go live [Red→Green]** — A run goes
       live **only** when `AI_FACTORY_LIVE=1`/`--live` **and** a live API key are
       both present; otherwise (even with creds set) it runs offline. **Red**: unit
@@ -107,7 +111,8 @@
       `src/ai_factory/dev_workflow/graph.py` to use the dual-mode runner instead of
       directly calling each deterministic function. **Required pre-step**: the graph
       hardcodes `capability_level="standard"` (line ~147), which is **not one of**
-      the model-map domain labels (`fast-cheap`/`capable`/`deep`). Decide a mapping
+      the model-map domain labels. (`simple`/`standard`/`complex` for task roles;
+      `shallow`/`standard`/`deep` for review). Decide a mapping
       for `standard` → `capable` (documented) so live mode resolves a real model, and
       update the graph to derive the level from `RoleAssignment` where possible.
       **Red**: graph smoke test — offline run follows the deterministic path;
@@ -148,8 +153,8 @@
       best-effort gate). **Red**: integration test under `tests/integration/...`
       that is skipped without creds/network.
 - [ ] **T041 — Docs & quickstart [Green]** — Document the env-vars config surface
-      (how to point at `opencode-go` vs `openrouter`), the per-capability-level
-      model map + overrides, and the offline-vs-live opt-in; update
+      (how to point at `opencode-go` vs `openrouter`), the per-role
+      capability-level model map + overrides, and the offline-vs-live opt-in; update
       `specs/004-llm-live-provider/quickstart.md`. Final green: `uv run ruff check .`
       + `uv run pytest` (unit+contract, no network) + best-effort `-m integration`.
 

@@ -1,50 +1,80 @@
-# Contract: Per-capability-level model map
+# Contract: Per-role capability-level model map
 
-**Purpose**: Resolve a nominal capability label to a **real model id** (with an
-embedded provider prefix) so the `dev_workflow` live executor can dispatch each
-role with the right model on the right provider.
+**Purpose**: Resolve a **role + capability level** to a **real, provider-prefixed
+model id** so the `dev_workflow` live executor can dispatch each role with the
+right model on the right provider.
 
-**Function**: `resolve_model_id(level: str) -> str` (in
+**Function**: `resolve_model_id(role: str, level: str) -> str` (in
 `ai_factory.capability_levels.model_map`).
 
-## Mapping rules (FR-010)
+## Two level axes (from `capability_levels`)
 
-Each nominal level maps to a **fully-qualified model id** whose prefix selects
-the provider. The two supported providers — `opencode-go` and `openrouter` —
-can be used **simultaneously**: each level picks whichever provider it wants.
+| Role category | Roles | Level axis |
+|---------------|-------|------------|
+| Task | `code_worker`, `test_engineer` | `simple` → `standard` → `complex` |
+| Review | `code_reviewer`, `security_reviewer` | `shallow` → `standard` → `deep` |
+| Fixed | `technical_planner`, `orchestrator`, `test_runner` | `standard` (pinned) |
 
-| Nominal level | Source | Example (opencode-go) | Example (openrouter) |
-|---------------|--------|----------------------|----------------------|
-| `fast-cheap`   | `MODEL_FAST_CHEAP` (JSON/code) | `opencode-go/deepseek-v4-flash` | `openrouter/deepseek/deepseek-v4-flash-0731` |
-| `capable`      | `MODEL_CAPABLE` | `opencode-go/deepseek-v4-pro` | `openrouter/qwen/qwen3.8-max` |
-| `deep`         | `MODEL_DEEP` | `opencode-go/kimi-k3` | `openrouter/moonshotai/kimi-k2.5` |
-| unknown/fallback | `MODEL_DEFAULT` | `opencode-go/deepseek-v4-flash` | `openrouter/deepseek/deepseek-v4-flash-0731` |
+Both axes are handled by the same nested JSON: each role lists the levels it
+uses, and each level maps to a model id.
 
 ## Configuration surface
 
-Two providers, both configured simultaneously:
+**API keys in env only (FR-018), never in the JSON:**
 
 | Env var | Purpose |
 |---------|---------|
 | `OPENCODE_GO_API_KEY` | opencode-go API key (never committed) |
 | `OPENROUTER_API_KEY` | openrouter API key (never committed) |
-| `OPENCODE_GO_BASE_URL` | opencode-go base URL (optional; known default) |
-| `OPENROUTER_BASE_URL` | openrouter base URL (optional; known default) |
-| `MODEL_FAST_CHEAP` / `MODEL_CAPABLE` / `MODEL_DEEP` / `MODEL_DEFAULT` | model id overrides (fully-qualified, provider-prefixed) |
+| `OPENCODE_GO_BASE_URL` / `OPENROUTER_BASE_URL` | per-provider base URL (optional; known default) |
+| `MODEL_FAST_CHEAP` / `MODEL_CAPABLE` / `MODEL_DEEP` / `MODEL_DEFAULT` | per-*level* env override (flattens the role axis) |
 | `AI_FACTORY_LIVE` | dual-mode opt-in gate (`1` = live) |
 
-**Optional `model-map.json`** (commit-safe, no secrets): a JSON mapping
-`{ "models": { "fast-cheap": "...", "capable": "...", "deep": "...", "default": "..." } }`
-merged over code defaults and overridden by env vars.
+**Optional `model-map.json`** (commit-safe, no secrets): nested role → level →
+model id.
 
-**Precedence**: code defaults `< model-map.json` `< env vars`.
+## `model-map.json` shape
 
-## Behavior
+```json
+{
+  "roles": {
+    "code_worker": {
+      "simple":   "opencode-go/deepseek-v4-flash",
+      "standard": "openrouter/qwen/qwen3.8-max",
+      "complex":  "opencode-go/kimi-k3"
+    },
+    "test_engineer": {
+      "simple":   "opencode-go/deepseek-v4-flash",
+      "standard": "openrouter/qwen/qwen3.8-max",
+      "complex":  "opencode-go/kimi-k3"
+    },
+    "code_reviewer": {
+      "standard": "openrouter/qwen/qwen3.8-max",
+      "deep":     "opencode-go/kimi-k3"
+    },
+    "orchestrator": {
+      "standard": "opencode-go/deepseek-v4-flash"
+    }
+  },
+  "default": "opencode-go/deepseek-v4-flash"
+}
+```
 
-- Each level resolves to a fully-qualified model id (provider-prefixed); the
-  same run can mix providers across levels (simultaneous use).
-- Unknown level → fallback to `MODEL_DEFAULT` (never an empty/garbage model id;
-  fail-closed in live mode).
-- The dispatcher parses the provider prefix (`opencode-go`/`openrouter`),
-  selects the matching key (`OPENCODE_GO_API_KEY`/`OPENROUTER_API_KEY`) and
-  base URL, then calls the OpenAI-compatible `/v1/chat/completions` endpoint.
+Both providers (`opencode-go`/`openrouter`) are usable **simultaneously** — each
+cell is a provider-prefixed model id.
+
+## Resolution rules (FR-010)
+
+- `resolve_model_id(role, level)`:
+  1. **env override** (flattened by level): `MODEL_FAST_CHEAP`/`MODEL_CAPABLE`/`MODEL_DEEP`
+     win for the matching level label, regardless of role (documented).
+  2. else **`model-map.json`**: `roles[role][level]`.
+  3. else **code defaults** (most specific available).
+  4. missing role/level/model → fall back to `MODEL_DEFAULT`/`default`.
+- Precedence overall: **code defaults < `model-map.json` < env**.
+- Unknown role/level or empty/garbage id → **fail-closed** in live mode (use the
+  deterministic path or raise a clear error), never dispatch with a bad id.
+
+The dispatcher parses the model-id prefix (`opencode-go`/`openrouter`), selects
+the matching key (`OPENCODE_GO_API_KEY`/`OPENROUTER_API_KEY`) and base URL, then
+calls the OpenAI-compatible `/v1/chat/completions` endpoint.

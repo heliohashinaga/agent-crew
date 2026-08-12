@@ -4,7 +4,7 @@
 
 This feature builds on the existing `LLMProvider`/`LLMResult`/`LLMMessage`
 contract from `ai_factory.shared.llm.provider` (used by the `researcher` web
-scope). It adds a concrete provider and a per-capability-level model map. No
+scope). It adds a concrete provider and a per-role capability-level model map. No
 changes to the `dev_workflow` data model (`RoleAssignment`) are required — it
 already carries `model` and `capability_level`.
 
@@ -42,18 +42,19 @@ A concrete `LLMProvider` speaking `POST /v1/chat/completions` (stdlib `urllib` o
 
 **Relationship**: `1` provider → `n` call sites (`researcher` web scope, `dev_workflow` role executor).
 
-### `PerCapabilityModelMap` (new)
+### `PerRoleCapabilityModelMap` (new)
 
-Maps nominal capability labels to real model ids, provider-prefixed, via code
-defaults `< optional`model-map.json`` `< env. Both providers can be used
-simultaneously.
+Maps a **role + capability level** to a real, provider-prefixed model id, via
+code defaults `< optional`model-map.json`` `< env. Both axes (`simple/standard/complex`
+for task roles; `shallow/standard/deep` for review roles) are handled; fixed
+roles pin to `standard`. Both providers usable simultaneously.
 
-| Level (nominal) | Env override | Default behavior |
-|-----------------|--------------|------------------|
-| `fast-cheap` | `MODEL_FAST_CHEAP` | flash-class model id (provider-prefixed) |
-| `capable` | `MODEL_CAPABLE` | pro-class model id |
-| `deep` | `MODEL_DEEP` | best-class model id |
-| *(unknown/fallback)* | `MODEL_DEFAULT` | documented default id |
+| Role | Level axis | Env override (flattened) | Default behavior |
+|------|-----------|--------------------------|------------------|
+| task roles (code_worker, test_engineer) | `simple`/`standard`/`complex` | `MODEL_FAST_CHEAP`/`MODEL_CAPABLE`/`MODEL_DEEP` | per level → provider-prefixed id |
+| review roles (code_reviewer, security_reviewer) | `shallow`/`standard`/`deep` | (flattened by level) | per level → provider-prefixed id |
+| fixed roles (technical_planner, orchestrator, test_runner) | `standard` | `MODEL_CAPABLE` | provider-prefixed id |
+| *(unknown role/level)* | — | `MODEL_DEFAULT` | documented default id |
 
 **Relationship**: `1` map → `1` real model id per capability level; consumed by the dual-mode executor.
 
@@ -62,7 +63,7 @@ simultaneously.
 ```text
 OpenAICompatibleProvider ──<injects>── researcher.web (call site #1)
 OpenAICompatibleProvider ──<dispatches>── dev_workflow role executor   (call site #2)
-PerCapabilityModelMap ──<resolves model id>── RoleAssignment.capability_level (live mode)
+PerRoleCapabilityModelMap ──<resolves model id by role+level>── RoleAssignment (live mode)
 LLMResult ──<returned by>── OpenAICompatibleProvider.complete(...)
 ```
 
@@ -80,7 +81,7 @@ LLMResult ──<returned by>── OpenAICompatibleProvider.complete(...)
   **redacted** (`redact_secret_like`, FR-018).
 - **FR-009 / FR-010**: live only when `AI_FACTORY_LIVE=1`/`--live` **AND** a
   resolvable API key; model id resolved from `capability_level` via the
-  per-capability model map; missing level → fail-closed (deterministic path or
+  per-role capability model map; missing level → fail-closed (deterministic path or
   clear error), never an empty/garbage model id.
 
 ## State Transitions

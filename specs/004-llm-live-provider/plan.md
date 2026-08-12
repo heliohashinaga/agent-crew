@@ -41,7 +41,7 @@ contract, network-free) and `-m integration` (real network/LLM, gated).
   `register_provider`), `ai_factory.shared.secrets.loader`
   (`SecretSource`, `load_credential`, `redact_secret_like`, `REDACTED`).
 - `ai_factory.capability_levels` — `RoleAssignment.model` nominal labels
-  (`fast-cheap`/`capable`/`deep`).
+  (`fast-cheap`/`capable`/`deep` → per-role level maps).
 - `ai_factory.dev_workflow.graph` — `_NODE_ROLE` node→role map;
   `code_worker.worker.implement` is the offline entrypoint (deterministic).
 
@@ -121,7 +121,7 @@ src/ai_factory/
 │       ├── provider.py                     # register_openai_compatible side effect
 │       └── openai_compatible.py            # NEW OpenAICompatibleProvider
 ├── capability_levels/
-│   └── model_map.py                        # NEW per-capability-level → real model id
+│   └── model_map.py                        # NEW per-role capability-level → model id
 └── dev_workflow/
     ├── executor/
     │   └── runner.py                       # NEW dual-mode role runner (offline/live)
@@ -145,7 +145,7 @@ tests/integration/shared/llm/test_openai_compatible_live.py
 
 This feature adds a **dual-mode execution path** to the `dev_workflow` (was
 hard-offline). That is a real behavioral surface: (1) a stdlib network provider,
-(2) a per-capability-level model map, and (3) an executor that switches
+(2) a per-role capability-level model map, and (3) an executor that switches
 offline/live. Justification: the user explicitly requested roles that can run
 offline **and** with a real LLM per level, while preserving the offline/testable
 default. The offline path is unchanged; live is additive and opt-in. No new

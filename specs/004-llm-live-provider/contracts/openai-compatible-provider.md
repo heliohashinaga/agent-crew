@@ -17,7 +17,7 @@ env vars only (FR-018), never in the JSON.** The two supported providers are
 | `MODEL_DEFAULT` | default model id (provider-prefixed) | code default |
 | `AI_FACTORY_LIVE` | dual-mode opt-in gate (`1` = live) | unset → offline |
 
-Both providers are available **simultaneously**: the per-capability-level model
+Both providers are available **simultaneously**: the per-role capability-level model
 ids (fully-qualified, provider-prefixed) each choose which provider to use, and
 the dispatcher selects the matching `OPENCODE_GO_API_KEY`/`OPENROUTER_API_KEY`
 and base URL by parsing the model id prefix.

@@ -22,7 +22,7 @@ This feature adds a **real, registered, OpenAI-compatible live LLM provider** to
 - Q: What provider protocol does the live provider speak? → A: An **OpenAI-compatible `POST /v1/chat/completions`** contract (shared by both opencode-go and openrouter). The provider is a standard library implementation with **no third-party HTTP dependency** (uses Python stdlib `urllib`), so it runs portably on a VPS with only Python + env vars.
 - Q: How are credentials supplied? → A: **Environment variables only** (or an injected secret source), per FR-018. The factory never embeds keys in committed config. Live is opt-in: `FakeProvider` remains the default when no credentials are set.
 - Q: How does a run stay offline/cost-free in tests? → A: The default stays `FakeProvider`. The live provider is exercised via stubbed HTTP in unit tests (no network) and gated `-m integration` for real calls. A unit/contract test asserts the suite does not touch the network.
-- Q: How is the model chosen **per role** in the `dev_workflow`? → A: Each `RoleAssignment.model` nominal label (`fast-cheap`/`capable`/`deep`, from `capability_levels`) is mapped to a real model id by a **per-capability-level model map** (config/env). In live mode the executor reads `RoleAssignment.model`'s level → maps it to the real id → calls the provider. Still configurable via env vars; no code edit for opencode-go vs openrouter.
+- Q: How is the model chosen **per role** in the `dev_workflow`? → A: Each (**role**, **capability level**) pair maps to a real, provider-prefixed model id via a **nested `model-map.json`** (`role→level→model id`), with env override (`MODEL_FAST_CHEAP`/`MODEL_CAPABLE`/`MODEL_DEEP`) and code defaults. Still configurable via env/JSON; no code edit to use opencode-go vs openrouter (or mix both simultaneously).
 - Q: How is the model chosen in the `researcher` web scope? → A: The per-level model map resolves a fully-qualified (provider-prefixed) model id; the dispatch selects the matching `OPENCODE_GO_API_KEY`/`OPENROUTER_API_KEY` and base URL (both providers usable simultaneously). Per-call override also supported.
 
 ## User Scenarios & Testing *(mandatory)*
@@ -86,7 +86,7 @@ An operator runs the `dev_workflow` (e.g. `dev-run`) **without** live creds → 
 1. **Given** offline mode (default), **When** the workflow runs with the network blocked, **Then** all roles complete deterministically, no HTTP call is made, and no live creds are required.
 2. **Given** live mode opted-in + creds present + stubbed transport, **When** a role runs, **Then** it calls the provider with the **real model id mapped from its capability level** and returns a product consistent with that response.
 3. **Given** live mode not opted-in, **When** roles run, **Then** they use the deterministic path even if creds are present — the presence of creds alone never changes behavior.
-4. **Given** a role's capability level, **When** the model map is consulted, **Then** it resolves to a real model id (e.g. `fast-cheap`→flash, `capable`→pro, `deep`→best), overridable via env, with a documented default.
+4. **Given** a role and its capability level, **When** the model map is consulted, **Then** it resolves to a real, provider-prefixed model id (e.g. `code_worker`→`simple`→flash-class, `code_reviewer`→`deep`→best-class), overridable via env/JSON, with a documented default.
 
 ### Edge Cases
 
@@ -110,7 +110,7 @@ An operator runs the `dev_workflow` (e.g. `dev-run`) **without** live creds → 
 - **FR-007**: System MUST confine live LLM to a **shared registered provider** used by two call sites: the `researcher` web scope **and** the `dev_workflow` role executor. The `dev_workflow` MUST keep a deterministic/offline default that is **never** changed by the presence of credentials (governing invariant — see FR-005).
 - **FR-008**: The unit/contract test suite MUST run **without network** for the deterministic paths: the live provider is tested with a **stubbed transport** (canned OpenAI-compatible JSON) and gated `-m integration` for real calls. A test MUST assert that HTTP is not attempted outside `-m integration`.
 - **FR-009 (dual-mode executor)**: The `dev_workflow` MUST support **two execution modes** per run: `offline` (default — roles run deterministically/network-free exactly as today) and `live` (roles dispatch through the registered provider). A run goes live **only** when `AI_FACTORY_LIVE=1`/`--live` is set **AND** a live API key is resolvable; otherwise it runs offline.
-- **FR-010 (per-capability-level model map)**: The system MUST map each capability-level nominal label (`fast-cheap`, `capable`, `deep`) to a **real, fully-qualified model id** (with a provider prefix) so different levels can target different providers simultaneously. Resolution reads an optional, commit-safe **`model-map.json`** merged over code defaults, with final env override (`MODEL_FAST_CHEAP`/`MODEL_CAPABLE`/`MODEL_DEEP`/`MODEL_DEFAULT`). Precedence: code defaults `< model-map.json` `< env. API keys live in env only (`OPENCODE_GO_API_KEY`/`OPENROUTER_API_KEY`), never in the JSON.
+- **FR-010 (per-role capability-level model map)**: The system MUST map each **(role, capability level)** pair — e.g. `code_worker`→`simple`/`standard`/`complex`, `code_reviewer`→`standard`/`deep`, fixed roles→`standard` — to a **real, fully-qualified model id** (provider-prefixed), so different roles/levels can target `opencode-go` or `openrouter` simultaneously. Resolution reads an optional, commit-safe **`model-map.json`** (nested `role→level→model id`) merged over code defaults, with final per-level env override (`MODEL_FAST_CHEAP`/`MODEL_CAPABLE`/`MODEL_DEEP`/`MODEL_DEFAULT`). Precedence: code defaults `< model-map.json` `< env. API keys live in env only (`OPENCODE_GO_API_KEY`/`OPENROUTER_API_KEY`), never in the JSON.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -119,7 +119,7 @@ An operator runs the `dev_workflow` (e.g. `dev-run`) **without** live creds → 
 - **Env vars (credentials / configuration)**: `OPENCODE_GO_API_KEY`, `OPENROUTER_API_KEY`, `OPENCODE_GO_BASE_URL`, `OPENROUTER_BASE_URL`, `MODEL_FAST_CHEAP`/`MODEL_CAPABLE`/`MODEL_DEEP`/`MODEL_DEFAULT`, and the optional `model-map.json` — the "configure models" surface; portable to a VPS via `export`.
 - **`researcher` web scope** — one consumer of the live provider (existing `lookup(..., scope="web")` seam, Option D, injected `LLMProvider`).
 - **`dev_workflow` role executor (dual-mode)** — the second consumer: dispatches roles either deterministically (offline, default) or through the provider (live, opt-in), resolving the model id from the role's capability level via a configurable map.
-- **Per-capability-level model map** — configurable (env-overridable) mapping of nominal labels (`fast-cheap`/`capable`/`deep`) to real model ids.
+- **Per-role capability-level model map** — configurable (`model-map.json` + env-overridable) mapping of (role, level) pairs (task `simple`/`standard`/`complex`; review `shallow`/`standard`/`deep`) to real, provider-prefixed model ids.
 
 ## Success Criteria *(mandatory)*
 
@@ -131,7 +131,7 @@ An operator runs the `dev_workflow` (e.g. `dev-run`) **without** live creds → 
 - **SC-004**: All unit+contract `pytest` pass deterministically; real HTTP/LLM web-scope tests run only under `-m integration` (best-effort, skipped when unavailable). `uv run ruff check .` passes.
 - **SC-005**: No secret value (API key) is emitted in any error, log, or telemetry string (FR-018 redaction asserted in a test).
 - **SC-006**: The `dev_workflow` runs **offline by default**: with the network blocked and live not opted-in, all roles produce identical deterministic output to today, and no HTTP call occurs — even if creds are set.
-- **SC-007**: In live mode (`AI_FACTORY_LIVE=1` + creds + stubbed transport), each role resolves its capability level to a real model id via the model map and calls the provider once with that id; products are consistent with the `LLMResult` returned.
+- **SC-007**: In live mode (`AI_FACTORY_LIVE=1` + creds + stubbed transport), each role resolves its model id via the **role+level** model map (`model_map.resolve_model_id(role, level)`) and calls the provider once with that provider-prefixed id; products are consistent with the `LLMResult` returned.
 
 ## Assumptions
 
@@ -139,4 +139,4 @@ An operator runs the `dev_workflow` (e.g. `dev-run`) **without** live creds → 
 - **OpenAI-compatible protocol**: opencode-go and openrouter both expose a `/v1/chat/completions` compatible surface, so a single stdlib provider serves both; providers/targets differ only by credentials (base_url/api_key/model env vars).
 - **Offline-safe by default**: default remains `FakeProvider`; live only activates with credentials present **and** explicit opt-in. Unit tests stub the transport; real calls are `-m integration`.
 - **Portability to VPS**: the provider uses only Python stdlib and env vars, so it runs on a slim VPS without the pi CLI or third-party HTTP client libraries.
-- **Per-capability-level model map**: nominal labels (`fast-cheap`/`capable`/`deep`) map to real ids via a configurable env-overridable map with documented defaults; operators can tune it per deployment.
+- **Per-role capability-level model map**: each (role, level) pair maps to a real, provider-prefixed model id via a configurable `model-map.json` + env-overridable map with documented defaults; operators tune per deployment.

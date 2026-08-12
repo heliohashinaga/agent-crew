@@ -18,7 +18,9 @@ configurable via env vars, no dependence on the pi CLI, and offline preserved.
 - `RoleAssignment` (in `dev_workflow/models.py`) already carries `model`,
   `capability_level`, budget, timeout, etc. So per-role model data **already
   exists**; only the execution wiring is missing — no data-model change needed.
-  The nominal labels are `fast-cheap`/`capable`/`deep` (`capability_levels`).
+  each (role, level) pair resolves to a real model id; task levels are
+  `simple`/`standard`/`complex`, review levels `shallow`/`standard`/`deep`
+  (`capability_levels`).
 - `graph.py` currently hardcodes `capability_level="standard"` (line ~147) and
   dispatches roles via CLI wrappers (`code_worker/cli.py`,
   `code_reviewer/cli.py`, etc.); `code_worker.worker.implement` is the current
@@ -35,9 +37,10 @@ configurable via env vars, no dependence on the pi CLI, and offline preserved.
 2. **Offline-by-default preserved**: `dev_workflow` runs the deterministic path
    unless both an explicit opt-in (flag/env) and live credentials are present.
    Presence of creds alone never changes behavior.
-3. **Per-capability-level model map** (`capability_levels/model_map.py`): maps
-   `fast-cheap`/`capable`/`deep` → real model id, env-overridable, documented
-   defaults. Executor resolves the real id per role in live mode.
+3. **Per-role capability-level model map** (`capability_levels/model_map.py`): maps
+   each (role, level) pair to a real, provider-prefixed model id via
+   code defaults `< model-map.json` `< env. Executor resolves the id per role in
+   live mode.
 4. **Dual-mode runner** (`dev_workflow/executor/runner.py`): offline delegates to
    current deterministic functions; live dispatches through the provider.
 5. **Credentials**: env/secret-store only (FR-018); error/telemetry strings
