@@ -3,11 +3,11 @@
 > `004-llm-live-provider`
 > Status: Planned
 
-- [ ] **Constitution**: TDD is non-negotiable — every implementation task starts
+- [x] **Constitution**: TDD is non-negotiable — every implementation task starts
       from a failing (Red) test. No code merges without passing tests. Ruff must
       pass (`uv run ruff check .`). `pytest` (unit + contract) must pass with no
       network required; real-LLM tests are gated `-m integration`.
-- [ ] Implementation order: Phase 1 (provider, US1/US2) → Phase 2 (model map,
+- [x] Implementation order: Phase 1 (provider, US1/US2) → Phase 2 (model map,
       FR-010) → Phase 3 (dual-mode executor + researcher web wiring, US3/US4 +
       FR-007/FR-009) → Phase 4 (offline-preservation tests + green suite)
       → Phase 5 (integration + docs).
