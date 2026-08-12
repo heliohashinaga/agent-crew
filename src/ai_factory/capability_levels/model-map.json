@@ -1,0 +1,34 @@
+{
+  "roles": {
+    "technical_planner": {
+      "standard": "openrouter/qwen/qwen3.8-max"
+    },
+    "security_reviewer": {
+      "shallow": "opencode-go/deepseek-v4-flash",
+      "standard": "openrouter/qwen/qwen3.8-max",
+      "deep": "opencode-go/kimi-k3"
+    },
+    "orchestrator": {
+      "standard": "openrouter/qwen/qwen3.8-max"
+    },
+    "test_runner": {
+      "standard": "openrouter/qwen/qwen3.8-max"
+    },
+    "test_engineer": {
+      "simple": "opencode-go/deepseek-v4-flash",
+      "standard": "openrouter/qwen/qwen3.8-max",
+      "complex": "opencode-go/kimi-k3"
+    },
+    "code_reviewer": {
+      "shallow": "opencode-go/deepseek-v4-flash",
+      "standard": "openrouter/qwen/qwen3.8-max",
+      "deep": "opencode-go/kimi-k3"
+    },
+    "code_worker": {
+      "simple": "opencode-go/deepseek-v4-flash",
+      "standard": "openrouter/qwen/qwen3.8-max",
+      "complex": "opencode-go/kimi-k3"
+    }
+  },
+  "default": "opencode-go/deepseek-v4-flash"
+}

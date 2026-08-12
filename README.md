@@ -89,6 +89,32 @@ print(result.summary)   # concise, fits the invoking role's context window
 #                 content_fetcher=...)
 ```
 
+## Live LLM provider & dual-mode (`specs/004-llm-live-provider/`)
+
+The factory ships a stdlib-only, OpenAI-compatible **live** provider
+(`openai-compatible`) with a **dual-mode** dev workflow: deterministic/offline
+by default, opt-in live with a real model per capability level. The same
+provider backs the `researcher` `web` scope (call-site #1) and the `dev_workflow`
+role executor (call-site #2, via `ai_factory.dev_workflow.executor.runner`).
+
+**Config surface (env-var only; no committed secrets, FR-018/SC-003):**
+
+| Variable | Purpose |
+|----------|---------|
+| `OPENCODE_GO_API_KEY` / `OPENROUTER_API_KEY` | keys (never committed) |
+| `OPENCODE_GO_BASE_URL` / `OPENROUTER_BASE_URL` | optional per-provider base URL |
+| `MODEL_FAST_CHEAP`/`MODEL_CAPABLE`/`MODEL_DEEP` | per-*level* model override |
+| `MODEL_DEFAULT` | global fallback model id |
+| `AI_FACTORY_LIVE` | opt-in gate (`1`/true = live; unset = offline) |
+
+**Offline vs live:** without `AI_FACTORY_LIVE` (and creds), every role stays
+deterministic and network-free (`FakeProvider`). A run goes live only when the
+operator opts in **and** a credential is present; an unmappable capability level
+fails closed rather than dispatching a bad model id.
+
+See [`specs/004-llm-live-provider/quickstart.md`](specs/004-llm-live-provider/quickstart.md)
+for scenarios and the env-var / model-map walkthrough.
+
 ## Documentation
 
 See [`specs/001-ai-dev-factory/quickstart.md`](specs/001-ai-dev-factory/quickstart.md)

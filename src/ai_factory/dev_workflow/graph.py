@@ -27,6 +27,7 @@ from langgraph.graph import END, START, StateGraph
 
 from ai_factory.dev_workflow.code_reviewer.reviewer import review as code_review
 from ai_factory.dev_workflow.code_worker.worker import implement
+from ai_factory.dev_workflow.executor.runner import RoleRunResult, run_role
 from ai_factory.dev_workflow.issues.policy import (
     classify_issue,
     is_deterministic,
@@ -44,6 +45,7 @@ from ai_factory.dev_workflow.technical_planner.planner import produce_plan
 from ai_factory.dev_workflow.test_engineer.engineer import build_test_suite
 from ai_factory.dev_workflow.test_runner.runner import run_tests
 from ai_factory.shared.git_host.client import GitHostClient, PullRequest
+from ai_factory.shared.llm.provider import LLMProvider
 from ai_factory.shared.sandbox.runner import Sandbox
 from ai_factory.shared.spec_store.handoff import load_spec_by_ref
 from ai_factory.shared.state.checkpointer import CheckpointStore
@@ -119,13 +121,58 @@ def build_dev_graph(
     telemetry_store: FileTelemetryStore | None = None,
     hooks: dict[str, Callable[[dict, dict], dict]] | None = None,
     resume: bool = False,
+    live: bool = False,
+    provider: LLMProvider | None = None,
 ):
-    """Compile the dev workflow graph bound to its adapters and seams."""
+    """Compile the dev workflow graph bound to its adapters and seams.
+
+    ``live`` / ``provider`` enable the dual-mode executor (T020-T023, US3/US4):
+    when ``live`` is True, each capability role's real model id is resolved and
+    dispatched through ``provider`` (or the registered ``openai-compatible``
+    provider). Offline (default) keeps today's deterministic behavior exactly.
+    """
     repo_root = Path(repo_root)
     run_dir = Path(run_dir) if run_dir else repo_root.parent / "runstate"
     budget_tracker = BudgetTracker(budget or Budget())
     ckpts = CheckpointStore(run_dir / "checkpoints")
     hooks = hooks or {}
+
+    def _telemetry_keys(res: RoleRunResult) -> dict:
+        """Forward the runner's live telemetry for the graph's telemetry sink."""
+        return {
+            "_tokens_in": res.tokens_in,
+            "_tokens_out": res.tokens_out,
+            "_cost": res.cost,
+            "_latency": res.latency,
+        }
+
+    def _role_level(state: DevState, role: str) -> str:
+        """The capability level to use for ``role`` (from exec_plan, else default)."""
+        exec_plan = state.get("exec_plan")
+        if exec_plan is not None:
+            try:
+                assignment = exec_plan.for_role(role)
+            except (KeyError, ValueError):
+                assignment = None
+            if assignment is not None:
+                return _attr(assignment, "capability_level", "standard") or "standard"
+        return "standard"
+
+    def _run(
+        role: str,
+        state: DevState,
+        fn: Callable[..., Any],
+        kwargs: dict[str, Any],
+    ) -> RoleRunResult:
+        """Dispatch ``role`` via the dual-mode runner (T020-T023)."""
+        return run_role(
+            role,
+            level=_role_level(state, role),
+            offline_fn=fn,
+            offline_kwargs=kwargs,
+            live=live,
+            provider=provider,
+        )
 
     def _telemetry(node_id: str, state: DevState, result: dict) -> None:
         if telemetry_store is None:
@@ -139,15 +186,23 @@ def build_dev_graph(
             isinstance(result.get("code_verdict"), object)
             and getattr(result.get("code_verdict"), "approved", True) is False
         )
+        # T023: report the actual resolved model + level in live mode; the
+        # deterministic 'fake'/standard otherwise.
+        model = result.get("_model") or "fake"
+        level = result.get("_level") or "standard"
         telemetry_store.add(
             state["run_id"],
             DevRoleInvocation(
                 role=role,  # type: ignore[arg-type]
-                model="fake",
-                capability_level="standard",
+                model=model,
+                capability_level=level,
                 telemetry=TelemetryRecord(
                     result="pass" if ok else "fail",
                     overspend=budget_tracker.overspend_flag,
+                    tokens_in=result.get("_tokens_in", 0) or 0,
+                    tokens_out=result.get("_tokens_out", 0) or 0,
+                    cost=result.get("_cost", 0.0) or 0.0,
+                    latency=result.get("_latency", 0.0) or 0.0,
                 ),
             ),
         )
@@ -195,24 +250,66 @@ def build_dev_graph(
         return "planner" if state.get("spec") is not None else "fail"
 
     def planner(state: DevState) -> dict:
-        return {"plan": produce_plan(state["spec"])}
+        plan = _run(
+            "technical_planner",
+            state,
+            produce_plan,
+            {"spec": state["spec"]},
+        )
+        return {
+            "plan": plan.output,
+            "_model": plan.model,
+            "_level": plan.capability_level,
+            **_telemetry_keys(plan),
+        }
 
     def orchestrator(state: DevState) -> dict:
         if state.get("spec") is not None:
-            return {"exec_plan": plan_execution(state["spec"], budget or Budget())}
+            fn = plan_execution
+            kwargs = {"spec": state["spec"], "budget": budget or Budget()}
+        else:
+            fn = plan_from_technical_plan
+            kwargs = {"plan": state["plan"], "budget": budget or Budget()}
+        plan = _run("orchestrator", state, fn, kwargs)
         return {
-            "exec_plan": plan_from_technical_plan(state["plan"], budget or Budget())
+            "exec_plan": plan.output,
+            "_model": plan.model,
+            "_level": plan.capability_level,
+            **_telemetry_keys(plan),
         }
 
     def code_worker(state: DevState) -> dict:
-        product = implement(state["plan"], Path(state["repo"]))
-        return {"code_product": product}
+        res = _run(
+            "code_worker",
+            state,
+            implement,
+            {"plan": state["plan"], "repo": Path(state["repo"])},
+        )
+        return {
+            "code_product": res.output,
+            "_model": res.model,
+            "_level": res.capability_level,
+            **_telemetry_keys(res),
+        }
 
     def code_reviewer(state: DevState) -> dict:
-        verdict = code_review(state["code_product"], state["plan"], Path(state["repo"]))
+        res = _run(
+            "code_reviewer",
+            state,
+            code_review,
+            {
+                "product": state["code_product"],
+                "plan": state["plan"],
+                "repo": Path(state["repo"]),
+            },
+        )
+        verdict = res.output
         return {
             "code_verdict": verdict,
             "last_error": verdict.feedback or "code review failed",
+            "_model": res.model,
+            "_level": res.capability_level,
+            **_telemetry_keys(res),
         }
 
     def rework(state: DevState) -> dict:
@@ -228,18 +325,37 @@ def build_dev_graph(
         return "handle_failure"
 
     def test_engineer(state: DevState) -> dict:
-        product = build_test_suite(state["plan"], Path(state["repo"]))
-        return {"test_product": product}
+        res = _run(
+            "test_engineer",
+            state,
+            build_test_suite,
+            {"plan": state["plan"], "repo": Path(state["repo"])},
+        )
+        return {
+            "test_product": res.output,
+            "_model": res.model,
+            "_level": res.capability_level,
+            **_telemetry_keys(res),
+        }
 
     def test_runner(state: DevState) -> dict:
         budget_tracker.charge(cost=0.001, tokens=100, time=5)
         suites = None
-        result = run_tests(Path(state["repo"]), sandbox, suites=suites)  # type: ignore[arg-type]
+        res = _run(
+            "test_runner",
+            state,
+            lambda repo, **kw: run_tests(repo, sandbox, **kw),
+            {"repo": Path(state["repo"]), "suites": suites},
+        )
+        result = res.output
         return {
             "test_result": result,
             "last_error": ("; ".join(result.failures) or "tests failed")
             if not result.passed
             else "",
+            "_model": res.model,
+            "_level": res.capability_level,
+            **_telemetry_keys(res),
         }
 
     def route_tests(state: DevState) -> str:
@@ -250,12 +366,21 @@ def build_dev_graph(
         return "handle_failure"
 
     def security_reviewer(state: DevState) -> dict:
-        verdict = security_review(Path(state["repo"]))
+        res = _run(
+            "security_reviewer",
+            state,
+            security_review,
+            {"repo": Path(state["repo"])},
+        )
+        verdict = res.output
         return {
             "security_verdict": verdict,
             "last_error": ("; ".join(verdict.findings) or "security review failed")
             if not verdict.approved
             else "",
+            "_model": res.model,
+            "_level": res.capability_level,
+            **_telemetry_keys(res),
         }
 
     def route_security(state: DevState) -> str:
