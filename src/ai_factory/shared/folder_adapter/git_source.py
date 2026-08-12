@@ -123,7 +123,7 @@ def write_back_tasks_pr(
     content the PR's diff represents.
     """
     body = (
-        "AI Factory folder-driven dev-run: task completion write-back.\n\n"
+        "AI Dev Factory folder-driven dev-run: task completion write-back.\n\n"
         "The diff updates `tasks.md` to mark completed tasks `[x]` "
         "(FR-010). No source code is shipped by this PR; review and merge "
         "the completion record."

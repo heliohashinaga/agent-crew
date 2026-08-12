@@ -34,7 +34,7 @@ def build_test_suite(plan: TechnicalPlan, repo: Path) -> TestSuiteProduct:
             if ac not in criteria:
                 criteria.append(ac)
 
-    lines = ['"""Generated test suite from the AI Factory test engineer."""', ""]
+    lines = ['"""Generated test suite from the AI Dev Factory test engineer."""', ""]
     for i, ac in enumerate(criteria, start=1):
         doc = ac.replace('"""', "'")
         lines.append(f"def test_ac_{i}() -> None:")

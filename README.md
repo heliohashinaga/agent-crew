@@ -1,4 +1,4 @@
-# AI Software Development Factory
+# AI Dev Factory
 
 Turns a natural-language feature request into a **reviewed, merge-ready pull
 request** through two independent, traceable workflows (FR-024).

@@ -275,7 +275,7 @@ def build_dev_graph(
             else ""
         )
         body = (
-            f"AI Factory delivery for folder {state['spec_version_id']}"
+            f"AI Dev Factory delivery for folder {state['spec_version_id']}"
             f"{run_ref}.\n"
             f"Goal: {intent}{adr_line}\n"
             "Test result: "
