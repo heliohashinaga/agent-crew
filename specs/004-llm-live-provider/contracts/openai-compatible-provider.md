@@ -3,16 +3,29 @@
 **Role**: An `LLMProvider` implementation speaking the OpenAI-compatible
 `/v1/chat/completions` HTTP contract (shared by `opencode-go` and `openrouter`).
 
-**Configuration surface (env vars)** — this is how an operator configures
-"which model the agents use", portable to a VPS:
+**Configuration surface (env vars + optional JSON)** — this is how an operator
+configures "which model the agents use", portable to a VPS. **API keys live in
+env vars only (FR-018), never in the JSON.** The two supported providers are
+`opencode-go` and `openrouter`.
 
 | Env var | Purpose | Default |
 |---------|---------|---------|
-| `OPENAI_COMPATIBLE_API_KEY` | Bearer token / API key | none (fail-fast or `FakeProvider`) |
-| `OPENAI_COMPATIBLE_BASE_URL` | Server base URL | OpenRouter-compatible default |
-| `OPENAI_COMPATIBLE_MODEL` | Default model id | `openrouter/auto` |
-| `AI_FACTORY_LIVE` | Dual-mode opt-in gate (`1` = live) | unset → offline |
-| `AI_FACTORY_MODEL_FAST_CHEAP` / `_CAPABLE` / `_DEEP` / `_DEFAULT` | Per-capability-level real model ids | opencode-go defaults |
+| `OPENCODE_GO_API_KEY` | opencode-go API key (Bearer) | none (fail-fast or `FakeProvider`) |
+| `OPENROUTER_API_KEY` | openrouter API key | none (fail-fast or `FakeProvider`) |
+| `OPENCODE_GO_BASE_URL` | opencode-go base URL | opencode-go default |
+| `OPENROUTER_BASE_URL` | openrouter base URL | openrouter default |
+| `MODEL_DEFAULT` | default model id (provider-prefixed) | code default |
+| `AI_FACTORY_LIVE` | dual-mode opt-in gate (`1` = live) | unset → offline |
+
+Both providers are available **simultaneously**: the per-capability-level model
+ids (fully-qualified, provider-prefixed) each choose which provider to use, and
+the dispatcher selects the matching `OPENCODE_GO_API_KEY`/`OPENROUTER_API_KEY`
+and base URL by parsing the model id prefix.
+
+Per-capability-level model ids resolve through **`model-map.json`** (optional,
+commit-safe, no secrets) merged with code defaults and final per-level env
+override `MODEL_FAST_CHEAP` / `MODEL_CAPABLE` / `MODEL_DEEP`. Precedence: code
+defaults < JSON < env.
 
 ## Interface — `complete(messages, **kwargs) -> LLMResult`
 

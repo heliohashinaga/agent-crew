@@ -34,11 +34,11 @@
       default `base_url`/`model`). **Red**: unit test asserts registration +
       `create_provider("openai-compatible")` works and unknown names still raise.
 - [ ] **T004 — Resolve creds from SecretSource/env, never commit [Red→Green]** —
-      The provider reads `OPENAI_COMPATIBLE_API_KEY`, `OPENAI_COMPATIBLE_BASE_URL`,
-      `OPENAI_COMPATIBLE_MODEL` via `load_credential`/injected `SecretSource`
-      (FR-018); a missing API key fails fast with a clear typed error. **Red**:
-      unit test injects a `_StubSecretSource` and asserts resolution; a missing key
-      raises a typed, clear error with no hang.
+      The provider reads `OPENCODE_GO_API_KEY`/`OPENROUTER_API_KEY`,
+      `OPENCODE_GO_BASE_URL`/`OPENROUTER_BASE_URL` via `load_credential`/injected `SecretSource`
+      (FR-018); a missing key fails fast with a clear typed error. **Red**: a unit
+      test injects a `_StubSecretSource` and asserts resolution; a missing key raises
+      a typed, clear error with no hang.
 - [ ] **T005 — `complete()` posts `/v1/chat/completions` & parses `LLMResult`
       [Red→Green]** — `complete(messages, **kwargs)` builds an OpenAI-compatible
       body (`model`, `messages`, optional `temperature`/`max_tokens`), POSTs to
@@ -67,15 +67,14 @@
 
 ### User Story 4 (supporting) - Resolve model id per capability level
 
-- [ ] **T010 — `model_map.py` with defaults + env override [Red→Green]** — Add
+- [ ] **T010 — `model_map.py` with defaults + JSON + env override [Red→Green]** — Add
       `src/ai_factory/capability_levels/model_map.py`: a function
       `resolve_model_id(level: str) -> str` returning a documented default real
-      model id for `fast-cheap`/`capable`/`deep`, overridable via env (named
-      `AI_FACTORY_MODEL_FAST_CHEAP`/`AI_FACTORY_MODEL_CAPABLE`/`AI_FACTORY_MODEL_DEEP`,
-      with `AI_FACTORY_MODEL_DEFAULT` fallback). Unknown level falls back to the
-      documented default. Defaults target the `opencode-go` OpenAI-compatible
-      model ids when `OPENAI_COMPATIBLE_BASE_URL` points at opencode-go. **Red**:
-      unit tests assert defaults, env override, and unknown-level fallback.
+      model id (provider-prefixed) for `fast-cheap`/`capable`/`deep`, resolved with
+      precedence **code defaults < `model-map.json` < env** (`MODEL_FAST_CHEAP`/`MODEL_CAPABLE`/
+      `MODEL_DEEP`, with `MODEL_DEFAULT` fallback). Both providers (opencode-go/openrouter) usable
+      simultaneously via the model-id prefix. **Red**: unit tests assert defaults,
+      `model-map.json` override, env override, and unknown-level fallback.
 
 ## Phase 3 — Dual-Mode Role Executor (US3/US4, FR-009)
 
@@ -143,10 +142,11 @@
 > Real network/LLM, gated `-m integration`, best-effort.
 
 - [ ] **T040 — Live integration path [Red→Green]** — Under `-m integration`, run
-      the live provider against a real endpoint when `OPENAI_COMPATIBLE_*` are set,
-      and the `web` scope end-to-end; skip gracefully when network/creds
-      unavailable (customary best-effort gate). **Red**: integration test under
-      `tests/integration/...` that is skipped without creds/network.
+      the live provider against a real endpoint when `OPENCODE_GO_API_KEY` (or
+      `OPENROUTER_API_KEY`) / `AI_FACTORY_LIVE` are set, and the `web` scope
+      end-to-end; skip gracefully when network/creds unavailable (customary
+      best-effort gate). **Red**: integration test under `tests/integration/...`
+      that is skipped without creds/network.
 - [ ] **T041 — Docs & quickstart [Green]** — Document the env-vars config surface
       (how to point at `opencode-go` vs `openrouter`), the per-capability-level
       model map + overrides, and the offline-vs-live opt-in; update

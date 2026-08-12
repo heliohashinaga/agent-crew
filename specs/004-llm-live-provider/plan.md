@@ -47,15 +47,15 @@ contract, network-free) and `-m integration` (real network/LLM, gated).
 
 **Storage / Credentials**:
 - Only **environment variables or an injected `SecretSource`** for credentials
-  (FR-018): `OPENAI_COMPATIBLE_API_KEY`, `OPENAI_COMPATIBLE_BASE_URL`,
-  `OPENAI_COMPATIBLE_MODEL`. Never committed config.
+  (FR-018): `OPENCODE_GO_API_KEY`, `OPENROUTER_API_KEY` (and optional
+  `OPENCODE_GO_BASE_URL`/`OPENROUTER_BASE_URL`). Never committed config.
 - **Live opt-in**: env `AI_FACTORY_LIVE=1` (or CLI `--live`) is required **and** a
-  resolvable `OPENAI_COMPATIBLE_API_KEY`; either alone → offline (FR-009).
-- Per-capability-level model map (env-overridable):
-  `AI_FACTORY_MODEL_FAST_CHEAP`, `AI_FACTORY_MODEL_CAPABLE`,
-  `AI_FACTORY_MODEL_DEEP`, with `AI_FACTORY_MODEL_DEFAULT` fallback. Defaults
-  resolve to the `opencode-go` OpenAI-compatible model ids when `OPENAI_COMPATIBLE_BASE_URL`
-  targets opencode-go; operators override via env or base_url swap (openrouter).
+  resolvable provider key (`OPENCODE_GO_API_KEY`/`OPENROUTER_API_KEY`); either
+  alone → offline (FR-009).
+- Per-capability-level model map: code defaults `< optional `model-map.json` `< env
+  `MODEL_FAST_CHEAP`/`MODEL_CAPABLE`/`MODEL_DEEP` (with `MODEL_DEFAULT` fallback).
+  Each level resolves a provider-prefixed model id, so `opencode-go` and
+  `openrouter` can be used simultaneously.
 
 **Testing** (per constitution Principle III Red-Green and Principle IV):
 - Unit/contract: `pytest` with a **stubbed transport** for the live provider

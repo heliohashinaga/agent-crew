@@ -34,23 +34,26 @@ A concrete `LLMProvider` speaking `POST /v1/chat/completions` (stdlib `urllib` o
 | Field | Type | Source | Notes |
 |-------|------|--------|-------|
 | `model_name` | `str` | constant | `"openai-compatible"` (registry key) |
-| `base_url` | `str` | env/inject | `OPENAI_COMPATIBLE_BASE_URL` → default OpenRouter-compatible |
-| `api_key` | `str` | env/inject | `OPENAI_COMPATIBLE_API_KEY` (never committed) |
-| `model` | `str` | env/inject | `OPENAI_COMPATIBLE_MODEL` → default `openrouter/auto` |
+| `provider` | `str` | model-id prefix | `opencode-go` \| `openrouter` (from the resolved model id) |
+| `api_key` | `str` | env/inject | `OPENCODE_GO_API_KEY` / `OPENROUTER_API_KEY` (never committed) |
+| `base_url` | `str` | env/inject | `OPENCODE_GO_BASE_URL` / `OPENROUTER_BASE_URL` → per-provider default |
+| `model` | `str` | env/inject/json | `MODEL_DEFAULT` or per-level id (provider-prefixed) |
 | `endpoint` | `str` | derived | `<base_url>/chat/completions` |
 
 **Relationship**: `1` provider → `n` call sites (`researcher` web scope, `dev_workflow` role executor).
 
 ### `PerCapabilityModelMap` (new)
 
-Maps nominal capability labels to real model ids, env-overridable.
+Maps nominal capability labels to real model ids, provider-prefixed, via code
+defaults `< optional`model-map.json`` `< env. Both providers can be used
+simultaneously.
 
 | Level (nominal) | Env override | Default behavior |
 |-----------------|--------------|------------------|
-| `fast-cheap` | `AI_FACTORY_MODEL_FAST_CHEAP` | flash-class opencode-go id |
-| `capable` | `AI_FACTORY_MODEL_CAPABLE` | pro-class opencode-go id |
-| `deep` | `AI_FACTORY_MODEL_DEEP` | best-class opencode-go id |
-| *(unknown/fallback)* | `AI_FACTORY_MODEL_DEFAULT` | documented default id |
+| `fast-cheap` | `MODEL_FAST_CHEAP` | flash-class model id (provider-prefixed) |
+| `capable` | `MODEL_CAPABLE` | pro-class model id |
+| `deep` | `MODEL_DEEP` | best-class model id |
+| *(unknown/fallback)* | `MODEL_DEFAULT` | documented default id |
 
 **Relationship**: `1` map → `1` real model id per capability level; consumed by the dual-mode executor.
 
@@ -68,9 +71,9 @@ LLMResult ──<returned by>── OpenAICompatibleProvider.complete(...)
 - **FR-001 / FR-005**: `OpenAICompatibleProvider` construction performs **no
   network I/O**; one HTTP call only inside `complete()`. `FakeProvider`
   remains the default.
-- **FR-002**: credentials only via env/`SecretSource`; never committed. Missing
-  API key → fail fast with `OpenAICompatibleError` (or `FakeProvider` fallback
-  where the caller tolerates it).
+- **FR-002**: credentials only via env (`OPENCODE_GO_API_KEY`/`OPENROUTER_API_KEY`)
+  /`SecretSource`; never committed. Missing key → fail fast with
+  `OpenAICompatibleError` (or `FakeProvider` fallback where tolerated).
 - **FR-003**: `complete()` parses `choices[0].message.content`, `usage`,
   `model` into `LLMResult`; conforms to the `LLMProvider` contract.
 - **FR-006**: non-2xx / non-JSON → `OpenAICompatibleError` with the API key
@@ -95,7 +98,8 @@ constructed (no network)
 Dual-mode run state (per run):
 
 ```text
-live = (opts in via AI_FACTORY_LIVE|--live) AND (api_key resolvable)
+live = (opts in via AI_FACTORY_LIVE|--live) AND (a provider api_key resolvable)
    ├─ false ──> offline path (deterministic, no network)
-   └─ true  ──> resolve model id per RoleAssignment.capability_level -> dispatch via provider
+   └─ true  ──> resolve provider-prefixed model id per level -> pick key/base_url
+                 by provider prefix -> dispatch via provider
 ```

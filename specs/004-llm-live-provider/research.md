@@ -48,8 +48,9 @@ configurable via env vars, no dependence on the pi CLI, and offline preserved.
 ## Portability (VPS)
 
 Provider + map + runner use only Python stdlib and env vars → run on a slim VPS
-with Python ≥ 3.14 and no pi CLI installed. Switching providers (opencode-go vs
-openrouter) = changing `OPENAI_COMPATIBLE_BASE_URL`/`_MODEL`/`_API_KEY`.
+with Python ≥ 3.14 and no pi CLI installed. Both providers (opencode-go and
+openrouter) can run simultaneously; each capability level selects its provider
+via a provider-prefixed model id (API keys via `OPENCODE_GO_API_KEY`/`OPENROUTER_API_KEY`).
 
 ## Open Investigation (todo in T023)
 
