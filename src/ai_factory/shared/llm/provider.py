@@ -84,7 +84,9 @@ class UnknownProviderError(ValueError):
     """Raised when :func:`create_provider` cannot find a registered name."""
 
 
-PROVIDERS: dict[str, type[LLMProvider]] = {"fake": FakeProvider}
+PROVIDERS: dict[str, type[LLMProvider]] = {
+    "fake": FakeProvider,
+}
 
 
 def _resolve_credential(name: str, source: SecretSource | None = None) -> str | None:
@@ -129,3 +131,12 @@ __all__ = [
     "create_provider",
     "register_provider",
 ]
+
+# Register the live OpenAI-compatible provider at the END of module
+# initialization, after the base classes are fully defined, to avoid a
+# circular import: ``openai_compatible`` imports from this module.
+from ai_factory.shared.llm.openai_compatible import (  # noqa: E402
+    OpenAICompatibleProvider,
+)
+
+PROVIDERS["openai-compatible"] = OpenAICompatibleProvider
