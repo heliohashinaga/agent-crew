@@ -131,7 +131,7 @@ The `loop_engine` is exposed as a library (core function) **and** as a CLI (`ai-
 
 ### Key Entities *(include if feature involves data)*
 
-- **`loop_engine` role**: a standalone control-loop capability; emits telemetry with `role == "loop_engine"`. It carries a configurable execution profile (not a mono-capacity researcher; the loop is an orchestrator-like role but implemented as a plain library).
+- **`loop_engine` role**: a standalone control-loop capability; emits telemetry with `role == "loop_engine"`. It carries a **constant execution profile** in its own library (like `researcher`; NOT routed through `capability_levels`, no escalation bump); termination/escalation is driven by runtime `LoopConfig` (`max_iterations`, `budget`, `ratchet`), not by capability-level escalation. The loop is an orchestrator-like role implemented as a plain library.
 - **`LoopConfig`**: immutable configuration: `actor`, `gate`, `max_iterations`, optional `budget` (time/tokens/cost), optional `ratchet`, `ledger` (persistence target), `run_id`.
 - **`LoopState` / ledger (spine)**: durable, append-only record of a run: `run_id`, iteration entries (actor output refs, gate verdicts, budget deltas, repair context), final status. Enables resume and audit.
 - **`GateVerdict`**: structured result of one verification: `passed: bool`, `checks: list[CheckResult]` (per-check pass/fail + bounded reasons), `consumed` (budget).

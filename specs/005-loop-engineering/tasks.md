@@ -71,11 +71,22 @@ is behind injectable seams and gated `-m integration`.
       **Red**: unit test round-trips a `LoopResult` and asserts a passed result
       has `escalation: None`, a non-passed result carries `escalation`
       (FR-004).
-- [ ] **T008 — Define `LoopConfig` model [Red→Green]** — `src/ai_factory/
-      loop_engine/models.py`. Fields: `actor`, `gate`, `max_iterations: int`,
-      `budget: LoopBudget|None`, `ratchet: RatchetConfig|None`, `ledger_dir:
-      Path`, `run_id: str`. **Red**: unit test validates: missing actor/gate and
-      `max_iterations <= 0`/absent raise a config error (fail fast, FR-009).
+- [ ] **T008 — Define `LoopConfig` model [Red→Green]** —
+      `src/ai_factory/loop_engine/models.py`. Fields: `actor`, `gate`,
+      `max_iterations: int`, `budget: LoopBudget|None`, `ratchet:
+      RatchetConfig|None`, `ledger_dir: Path`, `run_id: str`. Config is validated
+      before any run (FR-009): missing actor/gate or `max_iterations <= 0` are
+      rejected (fail fast). Also validate the **work/task input**: an
+      empty/missing work payload raises a typed input error rather than running
+      unsafely (spec Edge Cases, C2). **Red**: unit tests cover config fail-fast
+      AND empty work-input rejection.
+- [ ] **T009 [P] — Define constant execution profile [Red→Green]** —
+      `src/ai_factory/loop_engine/profile.py`. A **constant, non-escalating**
+      execution profile for `loop_engine` (logical model, limits) living in the
+      library and **NOT** routed through `capability_levels`/`FIXED_ROLES` (no
+      `bump_level`), mirroring `researcher.profile`. **Red**: unit test asserts
+      `loop_engine` exposes the constant profile and is NOT in
+      `capability_levels.FIXED_ROLES`.
 
 ## Phase 2 — Seams & Ledger (US1-4 foundation)
 
@@ -194,9 +205,20 @@ is behind injectable seams and gated `-m integration`.
       `exhausted` once budget is exceeded.
 - [ ] **T051 — Stall ratchet [Red→Green]** — `src/ai_factory/loop_engine/
       budget.py` + `engine.py`. Optional `RatchetConfig.max_stall` consecutive
-      no-progress iterations (via `progress_key`) → terminate early with
-      `stalled`/`exhausted` (US3 AS-3). **Red**: `FakeActor` yields no progress
-      across `max_stall` iterations → early `stalled` termination.
+      no-progress iterations → terminate early with `stalled`/`exhausted`
+      (US3 AS-3). **Progress** = the set of `artifact_refs` on `ActorOutput`
+      changes between consecutive iterations (via `progress_key`)
+      (FR-003). **Red**: `FakeActor` yields no progress across `max_stall`
+      iterations → early `stalled` termination; asserting a changed
+      `artifact_refs` set counts as progress.
+- [ ] **T053 — Actor-exception handling [Red→Green]** —
+      `src/ai_factory/loop_engine/engine.py`. When the **actor** raises an
+      exception (not just a gate failure), record the iteration as failed with
+      the error and apply the repair/retry path (if budget allows) or escalate;
+      never crash the whole loop unless configured to fail fast (spec Edge
+      Cases, C1). **Red**: a raising `FakeActor` → the run records the failed
+      iteration, applies repair/retry, and resolves to a non-pass `LoopResult`
+      (or typed error if fail-fast), never a silent unexpected crash.
 - [ ] **T052 — Human escalation summary [Red→Green]** — `src/ai_factory/
       loop_engine/escalation.py`. Non-pass ending always produces a concise
       `EscalationSummary` (status, iterations, bounded verdicts, budget consumed,
@@ -259,9 +281,11 @@ is behind injectable seams and gated `-m integration`.
 - [ ] **T073 — CLI human output + resolution/usage exits [Red→Green]** — `cli.py`.
       `--output-format human` prints a readable brief (status, iterations,
       verdicts, budget, refs); invalid config (missing actor/gate,
-      `--max-iterations <= 0`) → exit `3`; missing/empty args → exit `1` (US5
-      AS-3, FR-007). **Red**: contract tests assert human output + both non-zero
-      codes.
+      `--max-iterations <= 0`) → exit `3`; missing/empty args → exit `1`; and an
+      unavailable gate/actor surfacing `status == "error"` → exit `4` distinct
+      from usage/resolution (US5 AS-3, FR-007, F2). **Red**: contract tests
+      assert human output + the non-zero codes `1` (usage), `3` (resolution),
+      and `4` (`error`).
 - [ ] **T074 — Per-iteration telemetry, `role == "loop_engine"` [Red→Green]** —
       `src/ai_factory/loop_engine/engine.py` (and/or `cli.py`). Emit a
       `TelemetryRecord` per iteration via the shared telemetry seam with
@@ -323,9 +347,9 @@ is behind injectable seams and gated `-m integration`.
 ### Completion order
 
 ```
-Phase 1 (T001–T008)  →  Phase 2 (T020–T025)  →  Phase 3 (T030–T032, US1)
+Phase 1 (T001–T009)  →  Phase 2 (T020–T025)  →  Phase 3 (T030–T032, US1)
    └── Phase 4 (T040–T042, US2)   requires engine core (T030–T031)
-   └── Phase 5 (T050–T052, US3)   requires engine core (T030–T032)
+   └── Phase 5 (T050–T053, US3)   requires engine core (T030–T032)
    └── Phase 6 (T060–T062, US4)   requires engine core + ledger (T022–T025)
    └── Phase 7 (T070–T074, US5)   requires models + engine + ledger + budget
 Phase 8 (T080–T083)  +  Acceptance (T090–T092)
@@ -333,7 +357,7 @@ Phase 8 (T080–T083)  +  Acceptance (T090–T092)
 
 - **US1 (T030–T032)** is the MVP and the only blocking prerequisite for
   US2–US6 usability; recommended first.
-- **US2 (T040–T042)** and **US3 (T050–T052)** depend only on the engine core
+- **US2 (T040–T042)** and **US3 (T050–T053)** depend only on the engine core
   (T030–T032); they can be implemented in parallel with each other after US1.
 - **US4 (T060–T062)** depends on the engine core **and** the ledger foundation
   (T022–T025); can run parallel to US2/US3 once those bases exist.
@@ -345,7 +369,7 @@ Phase 8 (T080–T083)  +  Acceptance (T090–T092)
 - After **Phase 1 + T030–T032 (US1)**, these may run in parallel:
   - T040–T042 (US2) — files `engine.py` (does not overlap US1's, only adds
     invariant/error tests + small engine branches).
-  - T050–T052 (US3) — files `budget.py`, `escalation.py` + engine branches.
+  - T050–T053 (US3) — files `budget.py`, `escalation.py` + engine branches.
   - T060–T062 (US4) — `ledger.py` write hooks in `engine.py`.
   - T070–T074 (US5) — `cli.py`, `pyproject.toml`, telemetry emission.
   - If [P]-tagged (non-overlapping files), run concurrently under worktree
@@ -358,7 +382,7 @@ Phase 8 (T080–T083)  +  Acceptance (T090–T092)
   `ai_factory.loop_engine` outside the package (T092 must verify).
 - **CLI**: JSON on stdout by default, diagnostics to stderr; `--output-format
   human` for readable output; exit codes `0` passed / `2` exhausted/escalation /
-  `3` resolution-config / `1` usage (FR-007, `contracts/loop-cli.md`).
+  `3` resolution-config / `4` error / `1` usage (FR-007, `contracts/loop-cli.md`).
 - **Telemetry**: per-iteration `TelemetryRecord` with `role == "loop_engine"`;
   secrets redacted before emission (FR-008, Principle V).
 - Each task lists its exact file path; tests live under

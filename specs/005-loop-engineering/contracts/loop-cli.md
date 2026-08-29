@@ -43,10 +43,11 @@ ai-factory-loop --actor <binding> --gate <binding> --run-id <id>
 | `0`  | success — `LoopResult.status == "passed"` |
 | `2`  | exhausted/stalled/escalated — loop terminated without passing (distinct non-zero) |
 | `3`  | resolution/configuration error — invalid config, missing actor/gate, `--max-iterations <= 0` |
+| `4`  | `error` — an unavailable gate/actor surfaced a typed error to the CLI (US2 AS-3, F2), distinct from usage/resolution |
 | `1`  | usage error — missing/invalid arguments, empty task/work input |
 
-Per FR-007: `0` = passed; distinct non-zero codes for exhausted/escalation (`2`),
-resolution/config (`3`), usage (`1`).
+Per FR-007: `0` = passed; distinct non-zero codes for exhausted/escalation
+(`2`), error (`4`), resolution/config (`3`), usage (`1`).
 
 ## stdout / stderr
 

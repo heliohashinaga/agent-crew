@@ -49,8 +49,8 @@ uv run ai-factory-loop --actor factory --gate composite \
 - **Exhausted/escalation** → exits non-zero `2` (distinct from hard errors),
   `escalation` present in payload.
 - **Usage/resolution errors** → exit `1` (missing args, empty input) / `3`
-  (invalid config, `--max-iterations <= 0`, missing actor/gate, bad resume
-  `run_id`).
+  (invalid config, `--max-iterations <= 0`, missing actor/gate); an unavailable
+  gate/actor surfacing `status == "error"` → exit `4`.
 
 See [`contracts/loop-cli.md`](./contracts/loop-cli.md) for the full
 interface and exit-code table.
@@ -80,6 +80,7 @@ telemetry seam; secret-like values are redacted (FR-008).
 |-----|------|---------|
 | gate passes | `0` | `status: passed` |
 | never passes, budget/iter exhausted | `2` | `status: exhausted`/`stalled`, `escalation` present |
+| unavailable gate/actor | `4` | `status: error`, typed error surfaced |
 | config invalid (no actor, `max_iterations<=0`) | `3` | error, no run |
 | usage error (missing args, empty input) | `1` | usage message |
 | reviewer gate offline (integration) | clear typed skip/error | never silent pass |

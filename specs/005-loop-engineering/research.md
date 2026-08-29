@@ -176,7 +176,7 @@ substituível). Alinha com a constituição (YAGNI, Simplicidade) e com o padrã
 | D5 | **Terminação** = `max_iterations` (obrigatório, >0) + budget opcional (time/tokens/cost) + ratchet de stall | segurança (US3), FR-003/FR-009 |
 | D6 | **Escalação** na terminação = resumo conciso (status, iterações, vereditos bounded, budget, refs artifacts) | FR-004, Q3=A |
 | D7 | Telemetria por iteração `role == "loop_engine"` via seam `shared/telemetry` + `shared/cli_util` | FR-008, Principle V |
-| D8 | Reuso de `shared/cli_util.py` (JSON/human, exit codes, redação) — exit 0 passed / não-zero exhausted/usage/resolution | Principle II |
+| D8 | Reuso de `shared/cli_util.py` (JSON/human, exit codes, redação) — exit `0` passed / `2` exhausted/escalation/stalled / `3` resolution-config / `4` error / `1` usage | Principle II, FR-007 |
 | D9 | **Não wirear** loop_engine em nodes do dev_workflow (v1) | FR-010 (Library-First) |
 
 ## Fontes (pesquisa web 2026)

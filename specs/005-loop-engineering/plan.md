@@ -107,7 +107,7 @@ explicitly out of scope (spec Assumptions + research "target architecture").
 | Principle | Status | Evidence / Plan |
 |-----------|--------|-----------------|
 | **I. Library-First** | ✅ PASS | FR-001/FR-010/FR-012: `loop_engine` is a standalone, independently testable library under `src/ai_factory/loop_engine/`; workflows compose it, never the reverse; not wired into `dev_workflow` nodes in v1. |
-| **II. CLI Interface** | ✅ PASS | FR-007: `ai-factory-loop` exposes JSON + human-readable stdout, diagnostics on stderr, meaningful exit codes (0 passed / non-zero exhausted / usage / resolution). |
+| **II. CLI Interface** | ✅ PASS | FR-007: `ai-factory-loop` exposes JSON + human-readable stdout, diagnostics on stderr, meaningful exit codes (0 passed / 2 exhausted / 3 resolution / 4 error / 1 usage). |
 | **III. Test-First (NON-NEGOTIABLE)** | ✅ PASS | Red-Green-Refactor per task in `tasks.md` (TDD); deterministic tests via `FakeActor`/`FakeGate`; no implementation merges without passing tests. |
 | **IV. Integration Testing** | ✅ PASS | Independent-reviewer gate exercised under `-m integration`; deterministic core + fake-seam tests network-free; full suite green. |
 | **V. Simplicity & Observability** | ✅ PASS | Per-iteration telemetry (`role == "loop_engine"`, FR-008); ledger = audit + resume (FR-005); YAGNI applied (no multi-loop, no triggers, no interactive approvals in v1) — justified in `research.md`. |
@@ -145,7 +145,7 @@ src/ai_factory/
 │   ├── engine.py                # core run_loop(engine) control loop (deterministic, network-free)
 │   ├── factory_actor.py         # Q1=A concrete binding: folder-driven dev pipeline seam (library-only, not wired)
 │   ├── reviewer_gate.py         # Q2=C independent-reviewer second-stage gate (integration-gated)
-│   ├── profile.py               # constant (non-escalating) execution profile for the loop_engine role
+│   ├── profile.py               # constant, non-escalating execution profile for the loop_engine role (like researcher; NOT in capability_levels)
 │   ├── cli.py                   # ai-factory-loop entrypoint (reuses shared/cli_util.py)
 │   └── escalation.py            # concise human escalation summary builder
 │
