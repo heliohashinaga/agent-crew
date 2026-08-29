@@ -31,5 +31,5 @@
 
 ## Notes
 
-- All items pass. Q1=A (generic actor + dev pipeline binding), Q2=C (deterministic checks + independent reviewer gate), Q3=A (no interactive approvals; escalation at termination) resolved 2026-08-15.
+- All items pass. Q1=A (generic actor + dev pipeline binding), Q2=C (deterministic checks + independent reviewer gate), Q3=A (no interactive approvals; escalation at termination) resolved 2026-08-15. Q4=B (pluggable deterministic check set), Q5=A (distinct `stalled` status), Q6=A (actor-exception = budget-bounded retry, separate from `max_iterations`), Q7=A (budget = hard stop within `loop_engine`) resolved 2026-08-29.
 - Ready for `/speckit.plan`.
