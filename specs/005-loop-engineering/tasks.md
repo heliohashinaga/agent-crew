@@ -103,12 +103,14 @@ is behind injectable seams and gated `-m integration`.
       `contracts/actor-gate-seam.md`.
 - [ ] **T021 — Define `CompositeGate` [Red→Green]** — `src/ai_factory/
       loop_engine/gate.py` (or `composite_gate.py`). Deterministic checks run
-      first (network-free); an independent reviewer runs **only after**
-      deterministic checks pass; aggregate `passed` requires **all** checks
-      (Q2=C, FR-011). Link the reviewer stage to an injectable reviewer seam so
-      the network/LLM path is integration-gated. **Red**: unit test with a
-      failing deterministic check proves the reviewer is **not** invoked;
-      with all-deterministic-pass the verdict drives onward. See
+      first (network-free) and are **pluggable** (Q4=B): ship defaults
+      (`artifact_exists` + caller-supplied suite/contract checks are supplied
+      via the seam, not hard-coded in the core). An independent reviewer runs
+      **only after** deterministic checks pass; aggregate `passed` requires
+      **all** checks (Q2=C, FR-011). Link the reviewer stage to an injectable
+      reviewer seam so the network/LLM path is integration-gated. **Red**: unit
+      test with a failing deterministic check proves the reviewer is **not**
+      invoked; with all-deterministic-pass the verdict drives onward. See
       `contracts/actor-gate-seam.md`.
 - [ ] **T022 — Define file-backed ledger (spine) append [Red→Green]** —
       `src/ai_factory/loop_engine/ledger.py`. JSON-lines journal at

@@ -178,6 +178,10 @@ substituível). Alinha com a constituição (YAGNI, Simplicidade) e com o padrã
 | D7 | Telemetria por iteração `role == "loop_engine"` via seam `shared/telemetry` + `shared/cli_util` | FR-008, Principle V |
 | D8 | Reuso de `shared/cli_util.py` (JSON/human, exit codes, redação) — exit `0` passed / `2` exhausted/escalation/stalled / `3` resolution-config / `4` error / `1` usage | Principle II, FR-007 |
 | D9 | **Não wirear** loop_engine em nodes do dev_workflow (v1) | FR-010 (Library-First) |
+| D10 | **Gate deterministic checks pluggáveis** (Q4=B): default = artifact-exists + checks fornecidos pelo caller/binding; núcleo não hard-coda checks específicos de binding | FR-011 |
+| D11 | **`stalled` é status final distinto** (Q5=A), mesma família não-zero que `exhausted` | FR-003, exit codes; sinal acionável p/ operador |
+| D12 | **Actor-exception = retry bounded por budget**, NÃO consome slot `max_iterations` (Q6=A) | FR-004/FR-006 |
+| D13 | **Budget = hard stop** em `loop_engine` (Q7=A), divergência intencional scoped do soft-budget da factory | FR-003/SC-002 |
 
 ## Fontes (pesquisa web 2026)
 

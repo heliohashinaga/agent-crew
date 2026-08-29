@@ -31,7 +31,9 @@ ai-factory-loop --actor <binding> --gate <binding> --run-id <id>
 - **`--ledger-dir <path>`** (required): durable spine target (JSON-lines journal).
 - **`--max-iterations <N>`** (required, `> 0`): hard termination bound (FR-003).
 - **`--budget-tokens / --budget-seconds / --budget-cost`** (optional): termination
-  budget dimensions (FR-003).
+  budget dimensions (FR-003). Within `loop_engine`, exceeding a configured
+  budget dimension is a **hard stop → `exhausted`** (Q7=A): an intentional,
+  scoped divergence from the parent factory's soft-budget convention.
 - **`--ratchet-max-stall <N>`** (optional): stall/progress ratchet (FR-003).
 - **`--output-format <json|human>`** (default `json`): stdout shape.
 - **`--resume`**: continue a paused/interrupted run from its ledger (FR-005).

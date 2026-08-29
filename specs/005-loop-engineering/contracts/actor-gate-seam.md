@@ -27,6 +27,11 @@ decide `passed`. Only the external `Gate` decides. A `FakeActor` that always
 claims success while the `FakeGate` fails must yield `exhausted` (not `passed`),
 with the held-back reason being the gate's, not the actor's.
 
+**Actor-exception (Q6=A)**: if `actor.invoke(...)` raises an exception (not a
+gate failure), the iteration is recorded as **failed** and repaired via the
+repair path, but does **not** consume a `max_iterations` slot; such retries are
+bounded by the **budget**, escalating (FR-004) when budget is exhausted.
+
 ## The `Gate` seam
 
 ```python
@@ -45,8 +50,12 @@ class Gate(Protocol):
 ## Two-stage gate (Q2=C, FR-011)
 
 `CompositeGate` runs:
-1. **Deterministic checks** first — network-free (e.g. `suite_pass`,
-   `contract_pass` on the produced artifact). MUST pass before stage 2.
+1. **Deterministic checks** first — network-free (e.g. `artifact_exists`,
+   `suite_pass`, `contract_pass` on the produced artifact). Per **Q4=B** the
+   check set is **pluggable**: the core ships defaults (artifact referenced
+   exists + caller-supplied suite/contract checks), never hard-codes
+   binding-specific checks; concrete checks are supplied by the caller/binding
+   so the core stays generic. MUST pass before stage 2.
 2. **Independent reviewer** — a separate role/model reviewing the artifact.
    Runs only after stage 1 passes. Integration-gated (`-m integration`); when
    network/LLM is unavailable it surfaces clearly (typed error or documented

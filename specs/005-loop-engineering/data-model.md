@@ -71,8 +71,12 @@ Termination budget (optional). At least one consumable dimension.
 
 Consumed budget is recorded as a `BudgetDelta` (tokens/cost/latency) per
 iteration; when a dimension exceeds its ceiling before the gate passes, the loop
-stops with outcome `exhausted` (US3, SC-2). Budget exhausted mid-iteration: the
-current iteration may finish (atomic checkpoint) but the next does not start.
+**hard-stops** with outcome `exhausted` (US3, SC-2). Per **Q7=A** this is an
+intentional, scoped divergence from the parent factory's soft-budget (warn +
+continue) convention — within `loop_engine` budget is a **hard termination**;
+the parent's soft-budget applies to its own cost tracking, not loop termination.
+Budget exhausted mid-iteration: the current iteration may finish (atomic
+checkpoint) but the next does not start.
 
 ### `RatchetConfig`
 Stall/progress detector (optional).
@@ -155,7 +159,10 @@ Concise human escalation (FR-004, Q3=A).
   absent ledger on resume → fresh run with warning or clear error, never
   silent corruption.
 - **FR-006**: repair path feeds the previous `GateVerdict` (bounded, concise)
-  into the next actor invocation.
+  into the next actor invocation. If the **actor raises an exception**, the
+  iteration is recorded as **failed** and repaired via this path, but (per
+  **Q6=A**) does **not** consume a `max_iterations` slot; such retries are
+  bounded by the **budget**, escalating (FR-004) when budget is exhausted.
 - **FR-008**: per-iteration telemetry `role == "loop_engine"` with tokens/cost/
   latency/retries/errors/escalations/result; secrets redacted.
 - **FR-011**: deterministic checks pass first; independent reviewer runs only

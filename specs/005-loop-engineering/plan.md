@@ -88,12 +88,22 @@ bounded by a target.
   (FR-002, US2).
 - Termination is guaranteed from config validation (FR-009): `max_iterations`
   required and `> 0`; missing/zero termination limits fail fast.
+- Budget within `loop_engine` is a **hard stop → `exhausted`** (Q7=A, FR-003);
+  this is an intentional, scoped divergence from the parent factory's
+  soft-budget (warn + continue) convention.
+- **Actor-exception** (not a gate failure) records a failed iteration and
+  repairs via the repair path, but does **not** consume a `max_iterations` slot
+  (Q6=A); retries are bounded by budget, escalating on exhaustion.
+- **`stalled`** is a distinct final status from `exhausted` (Q5=A).
 - Credentials/LLM only behind seams and integration-gated; secrets redacted
   from telemetry (FR-008).
 - Resume requires the same `run_id`; a mismatched/absent/corrupt ledger yields a
   fresh run with a warning or a clear typed error — never silent corruption.
 - Deterministic core remains network-free even when review-aware
-  (FR-011) — exactly the `researcher` `repo` vs `web` scoping pattern.
+  (FR-011) — exactly the `researcher` `repo` vs `web` scoping pattern. The
+  deterministic check set is **pluggable** (Q4=B): default = artifact referenced
+  exists + caller-supplied suite/contract checks; the core never hard-codes
+  binding-specific checks.
 
 **Scale/Scope**: v1 = single loop, one harness, manual trigger, one concrete
 actor binding + one composite gate. Multi-loop composition, scheduled/event

@@ -28,8 +28,12 @@ All US1–US3 verification runs through unit/contract tests under
 - **US2 / FR-002**: no-self-grading — `FakeActor` claims success while
   `FakeGate` fails → `exhausted`, held-back reason is the **gate's** (SC-003).
   Gate-unavailable → typed error, never silent pass.
-- **US3 / FR-003/004**: budget/ratchet termination — `exhausted` + concise
-  escalation summary (status, iterations, bounded verdicts, budget, refs).
+- **US3 / FR-003/004**: budget/ratchet termination — budget is a **hard stop**
+  within `loop_engine` (Q7=A, scoped divergence from the factory's soft-budget);
+  exhaustion → `exhausted`; ratchet no-progress → distinct `stalled` (Q5=A);
+  both yield a concise escalation summary (status, iterations, bounded verdicts,
+  budget, refs). Actor-exceptions (Q6=A) retry bounded by budget without
+  consuming a `max_iterations` slot.
 - **US4 / FR-005**: pause/resume on `tmp_path` — interrupt after k iterations,
   resume to `k+1`, total preserved (SC-004).
 
@@ -79,7 +83,7 @@ telemetry seam; secret-like values are redacted (FR-008).
 | Run | Exit | Payload |
 |-----|------|---------|
 | gate passes | `0` | `status: passed` |
-| never passes, budget/iter exhausted | `2` | `status: exhausted`/`stalled`, `escalation` present |
+| never passes, budget/iter exhausted | `2` | `status: exhausted` (hard-stop on budget, Q7) or `stalled` (ratchet, Q5); `escalation` present |
 | unavailable gate/actor | `4` | `status: error`, typed error surfaced |
 | config invalid (no actor, `max_iterations<=0`) | `3` | error, no run |
 | usage error (missing args, empty input) | `1` | usage message |
