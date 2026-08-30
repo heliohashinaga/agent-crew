@@ -1,11 +1,12 @@
 # AI Dev Factory
 
-> **An autonomous coding factory**: turn a natural-language feature request
-> into a **reviewed, merge-ready pull request** — designed, planned, coded,
-> tested and security-reviewed by a team of AI role-agents, with every step
-> traceable and auditable.
+> **Agent-to-agent interaction across the software development cycle**: a swarm
+> of specialized AI role-agents (planner, coder, reviewer, tester, security)
+> that hand work between one another to turn a natural-language feature
+> request into a **reviewed, merge-ready pull request** — every step traceable
+> and auditable.
 
-[![CI](https://github.com/heliohashinaga/ai-dev-factory/actions/workflows/ci.yml/badge.svg)](https://github.com/heliohashinaga/ai-dev-factory/actions/workflows/ci.yml)
+[![CI](https://github.com/heliohashinaga/agentic-relay/actions/workflows/ci.yml/badge.svg)](https://github.com/heliohashinaga/agentic-relay/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.14-blue)](#requirements)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
@@ -15,12 +16,13 @@
 
 Coding agents are powerful, but **one prompt → one answer** is fragile. AI Dev
 Factory inverts the loop: instead of a single model doing a single pass, a
-**pipeline of specialized role-agents** (planner, coder, reviewer, tester,
-security, orchestrator) collaboratively produces a change — and that change is
-**verified by an independent team**, not by the model that wrote it.
+**swarm of interacting role-agents** (planner, coder, reviewer, tester, security,
+orchestrator) works through the development cycle — each agent passes its
+output to the next, and the change is **verified by an independent agent**, not
+by the model that wrote it.
 
 The result is a **reviewed, merge-ready PR**, always grounded in a
-specification, with observable telemetry for every step.
+specification, with observable telemetry for every step and every handoff.
 
 ## Highlights
 
