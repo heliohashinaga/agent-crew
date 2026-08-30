@@ -16,7 +16,6 @@ the implementation phase for those).
 ## Setup
 
 ```bash
-cd /home/helio/repos/ai-factory
 uv sync
 uv run ruff check .
 uv run pytest -q
