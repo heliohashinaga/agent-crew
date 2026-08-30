@@ -1,17 +1,27 @@
 # CI for agent-crew (a swarm of AI agents collaborating across the software
 # development lifecycle).
 #
-# Runs lint (ruff) plus the offline unit/contract tests with the network guard.
+# Runs lint (ruff) plus the offline unit/contract tests with the network guard,
+# plus a heuristic-free quality gate (cyclomatic complexity, runs with the
+# suite). Integration (network/container) and real-network `live` jobs are
+# intentionally deferred until a relevant suite exists.
 #
 # Hermeticity: deterministic jobs never touch the real network or a container
-# runtime. Integration (network/container) and `live` (real-network) jobs are
-# intentionally NOT enabled yet — they will be added when a real integration
-# test suite exists (currently the hello-world slice is offline/deterministic).
+# runtime. The opt-in `quality` job (mutation testing) and `live` job run only
+# via workflow_dispatch when explicitly requested — never on every push/PR —
+# so deterministic CI stays fast and hermetic.
 name: CI
 
 on:
   push:
   pull_request:
+  # Allow running the opt-in quality (mutation) job on demand via the UI.
+  workflow_dispatch:
+    inputs:
+      run_quality:
+        description: "Run mutation testing (mutmut)"
+        type: boolean
+        default: false
 
 jobs:
   lint:
@@ -47,3 +57,43 @@ jobs:
         run: uv sync --all-extras --dev
       - name: Unit + contract tests (network blocked)
         run: uv run pytest -m "not integration"
+
+  # Opt-in mutation testing. Run only via workflow_dispatch (never on push/PR),
+  # because it is deliberately expensive. Gates on mutation score: the job fails
+  # if the score drops below the required threshold.
+  quality:
+    runs-on: ubuntu-latest
+    needs: lint
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_quality }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
+      - name: Mutation testing (mutmut)
+        run: uv run mutmut run
+      - name: Export mutation stats
+        run: uv run mutmut export-cicd-stats
+      - name: Gate on mutation score (>= 90%)
+        # Fails the job if the mutation score falls below the required
+        # threshold (or no mutants were generated).
+        run: |
+          python - <<'EOF'
+          import json
+          stats = json.load(open("mutants/mutmut-cicd-stats.json"))
+          total = stats["total"]
+          killed = stats["killed"]
+          score = killed / total if total else 1.0
+          required = 0.9
+          assert score >= required, (
+              f"mutation score {score:.0%} < required {required:.0%} "
+              f"({stats['survived']} survived)"
+          )
+          print(f"mutation score: {score:.0%} ({killed}/{total} killed, "
+                f"{stats['survived']} survived) — ok")
+          EOF
