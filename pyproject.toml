@@ -3,7 +3,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "agentic-relay"
+name = "agent-crew"
 version = "0.1.0"
 description = "A swarm of AI agents collaborating across the software development lifecycle."
 readme = "README.md"
@@ -15,6 +15,11 @@ dependencies = [
     "langchain-core>=1.0",
     "pydantic>=2.0",
 ]
+
+[project.scripts]
+# Library-First + CLI principle: the hello-world base exposes a console script
+# that composes the library node.
+agentcrew-hello = "agentcrew.cli:main"
 
 [dependency-groups]
 dev = [
