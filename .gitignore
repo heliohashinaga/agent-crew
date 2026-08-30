@@ -31,6 +31,10 @@ venv/
 # Local tooling (speckit/specify scaffolding)
 .specify/
 
+# Mutation testing workspace (mutmut)
+mutants/
+.mutmut-cache/
+
 # === Universal / editor / OS patterns ===
 # macOS
 .DS_Store

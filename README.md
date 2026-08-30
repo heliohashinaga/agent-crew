@@ -33,6 +33,24 @@ uv run pytest
 See [`specs/001-langchain-hello-node/`](specs/001-langchain-hello-node/) for the
 current design (spec, plan, tasks).
 
+## Quality gates
+
+### Cyclomatic complexity
+Enforced in CI: a `quality` gate (`tests/quality/test_complexity.py`) fails if
+any function in `src/agentcrew/` exceeds a cyclomatic complexity budget of 10.
+Runs automatically with `uv run pytest`.
+
+### Mutation testing (local / opt-in)
+Mutation testing is expensive, so it runs on demand — it is **not** part of the
+deterministic CI `test` job. It is scoped to the pure library logic (`nodes/`).
+
+```sh
+uv run mutmut run        # mutate nodes/ and try to kill each mutant with the unit tests
+uv run mutmut results    # show any surviving mutants (target: high kill rate)
+```
+
+Current baseline: 7/7 mutants killed (100%).
+
 ## License
 
 MIT — see [`LICENSE`](LICENSE).

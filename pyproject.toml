@@ -23,8 +23,10 @@ agentcrew-hello = "agentcrew.cli:main"
 
 [dependency-groups]
 dev = [
+    "mutmut>=3.7.0",
     "pytest>=8.0",
     "pytest-cov>=5.0",
+    "radon>=6.0.1",
     "ruff>=0.6",
 ]
 
@@ -38,10 +40,25 @@ where = ["src"]
 target-version = "py314"
 line-length = 88
 src = ["src", "tests"]
+# mutmut generates a `mutants/` workspace with instrumented copies of src/;
+# never lint those (they are only mutation-run artifacts).
+exclude = ["mutants/"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
 ignore = []
+
+[tool.mutmut]
+# Mutation testing scoped to the pure library logic (offline, deterministic).
+# The CLI (io-heavy) is excluded: mutating it yields low-value/noisy mutants.
+source_paths = ["src/agentcrew/nodes/"]
+# Bring the rest of the package into mutmut's copy workspace so the contract
+# test (which imports agentcrew.cli) can be imported during collection, while
+# only nodes/ stays in scope for mutation.
+also_copy = ["src/agentcrew/__init__.py", "src/agentcrew/cli.py"]
+# Run only the unit tests as mutation detectors (fast, exercise the library
+# logic directly). Contract/integration are not useful per-mutant detectors.
+pytest_add_cli_args_test_selection = ["-m", "unit"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -53,4 +70,5 @@ markers = [
     "contract: tests of the library-CLI contract seams",
     "integration: end-to-end workflow tests (network + container)",
     "live: real network tests that intentionally leave the hermetic sandbox (best-effort; excluded from deterministic CI runs)",
+    "quality: static-analysis quality gates (e.g. cyclomatic complexity) — runs in deterministic CI",
 ]
