@@ -1,0 +1,49 @@
+# CI for agent-crew (a swarm of AI agents collaborating across the software
+# development lifecycle).
+#
+# Runs lint (ruff) plus the offline unit/contract tests with the network guard.
+#
+# Hermeticity: deterministic jobs never touch the real network or a container
+# runtime. Integration (network/container) and `live` (real-network) jobs are
+# intentionally NOT enabled yet — they will be added when a real integration
+# test suite exists (currently the hello-world slice is offline/deterministic).
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
+      - name: Lint (ruff)
+        run: uv run ruff check .
+
+  test:
+    runs-on: ubuntu-latest
+    needs: lint
+    strategy:
+      matrix:
+        python-version: ["3.14"]
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
+      - name: Unit + contract tests (network blocked)
+        run: uv run pytest -m "not integration"
