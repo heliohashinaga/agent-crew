@@ -4,8 +4,10 @@ Guidance for AI coding agents working in this repository.
 
 ## Project
 
-The **AI Dev Factory** turns a natural-language feature
-request into a reviewed, merge-ready pull request. Providers contribute **spec
+The **AI Dev Factory** is a **swarm of AI role-agents** that
+**interact across the software development cycle** — planning, building,
+testing, reviewing and securing — to turn a natural-language feature request
+into a reviewed, merge-ready pull request. Providers contribute **spec
 role libraries** (a `spec_agent` that drafts a `SpecVersion` and a
 `requirements_reviewer` that gates it) plus a **Development Workflow**
 (how/build/prove/assess: approved spec folder → plan → orchestrated execution →
