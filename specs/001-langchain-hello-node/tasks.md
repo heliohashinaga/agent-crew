@@ -9,7 +9,7 @@ description: "Task list template for feature implementation"
 
 **Prerequisites**: plan.md, spec.md (US1), research.md, data-model.md, contracts/hello-world-node-cli.md
 
-**Tests**: The project constitution (**`AGENTS.md`**) mandates **TDD (non-negotiable)** — a failing test precedes each implementation — so test tasks are required here and MUST be written to fail before implementing.
+**Tests**: The project constitution (`.specify/memory/constitution.md`; runtime guidance in `AGENTS.md`) mandates **TDD (non-negotiable)**, including automated tests for the library↔CLI contract seam (Principle IV) — so test tasks are required here and MUST be written to fail before implementing.
 
 **Organization**: Grouped by user story. This feature has one user story (US1, P1, MVP).
 
@@ -31,7 +31,7 @@ Single Python project: `src/`, `tests/` at repository root (package `agentcrew`)
 
 - [ ] T001 Verify `langchain-core>=1.0` is declared in `pyproject.toml` and that `uv lock`/`uv sync` resolves cleanly
 - [ ] T002 [P] Create `src/agentcrew/nodes/__init__.py` package init for the nodes library
-- [ ] T003 [P] Create empty test package inits if missing: `tests/unit/__init__.py` and `tests/integration/__init__.py`
+- [ ] T003 [P] Create empty test package inits if missing: `tests/unit/__init__.py`, `tests/contract/__init__.py`, and `tests/integration/__init__.py`
 
 ---
 
@@ -55,8 +55,8 @@ Single Python project: `src/`, `tests/` at repository root (package `agentcrew`)
 
 ### Tests for User Story 1 (TDD — write FIRST, ensure they FAIL before implementation) ⚠️
 
-- [ ] T005 [P] [US1] Unit test: node returns deterministic `{"input": "<text>", "greeting": "Hello, <text>!"}` for the same input and strips whitespace — in `tests/unit/test_hello_world.py`
-- [ ] T006 [P] [US1] Integration test: CLI run returns `Hello, world!` on stdout and exit code `0`; usage error on empty/missing arg returns exit code `1` — in `tests/integration/test_hello_world_cli.py`
+- [ ] T005 [P] [US1] Unit test: node returns deterministic `{"input": "<text>", "greeting": "Hello, <text>!"}` for identical input, strips surrounding whitespace, and the `HelloWorldNodeResult` model rejects empty and whitespace-only input (model-level validation) — in `tests/unit/test_hello_world.py`
+- [ ] T006 [P] [US1] Contract test (offline; mark `@pytest.mark.contract` so it runs under plain `uv run pytest` and is not excluded by the default `-m 'not integration'` filter): CLI returns `Hello, world!` on stdout with exit code `0`; returns exit code `1` on empty/missing/whitespace-only arg; returns exit code `4` on a forced invocation failure — in `tests/contract/test_hello_world_cli.py`
 
 ### Implementation for User Story 1
 
@@ -71,7 +71,7 @@ Single Python project: `src/`, `tests/` at repository root (package `agentcrew`)
 
 **Purpose**: Improvements affecting the whole base
 
-- [ ] T009 Run full validation and confirm green: `uv run ruff check .` (no issues) and `uv run pytest` (all pass) per `specs/001-langchain-hello-node/quickstart.md`
+- [ ] T009 Run full validation and confirm green: `uv run ruff check .` (no issues) and `uv run pytest` (all pass, including the T006 contract test which is not excluded by the default `-m 'not integration'` filter) per `specs/001-langchain-hello-node/quickstart.md`
 - [ ] T010 [P] Add the run/verify commands and repo short description reference to `README.md` (keep the CI badge; CI stays disabled as `.github/workflows/ci.yml.disabled` during bootstrap)
 - [ ] T011 [P] Add the console-script entry point `agentcrew-hello = "agentcrew.cli:main"` under `[project.scripts]` in `pyproject.toml` and verify `uv sync`/`uv build` succeed with it
 
@@ -110,7 +110,7 @@ Single Python project: `src/`, `tests/` at repository root (package `agentcrew`)
 ```bash
 # Write both tests in parallel (TDD — they must fail first):
 Task: "Unit test for hello-world node in tests/unit/test_hello_world.py"                  # T005
-Task: "Integration test for hello-world CLI in tests/integration/test_hello_world_cli.py" # T006
+Task: "Contract test for hello-world CLI in tests/contract/test_hello_world_cli.py" # T006
 
 # After tests fail and model (T004) exists, implement node + CLI:
 Task: "Implement build_hello_world_node() in src/agentcrew/nodes/hello_world.py"      # T007
