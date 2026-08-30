@@ -15,6 +15,12 @@ htmlcov/
 
 # Virtual environments
 .venv
+venv/
+
+# Secrets / environment (keep .env.example tracked)
+.env
+.env.*
+!.env.example
 
 # Local session data
 .pi/
@@ -25,7 +31,11 @@ htmlcov/
 # Local tooling (speckit/specify scaffolding)
 .specify/
 
-# ===- Universal / editor / OS patterns ===-===
+# Mutation testing workspace (mutmut)
+mutants/
+.mutmut-cache/
+
+# === Universal / editor / OS patterns ===
 # macOS
 .DS_Store
 .AppleDouble
@@ -56,7 +66,9 @@ Desktop.ini
 
 # Test / coverage extras
 .htmlcov/
+.coverage
 .coverage.*
+coverage.xml
 *.py[co]  # (already above, kept for clarity)
 
 # OS-generated cruft
