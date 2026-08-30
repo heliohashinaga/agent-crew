@@ -33,6 +33,8 @@ CLI_MODULES = [
     "ai_factory.cli.dev_run",
     # Researcher (mono-capacity lookup role)
     "ai_factory.researcher.cli",
+    # Loop Engineering (autonomous control-loop role)
+    "ai_factory.loop_engine.cli",
 ]
 
 

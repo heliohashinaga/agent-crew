@@ -30,6 +30,7 @@ DevRole = Literal[
     "test_runner",
     "security_reviewer",
     "researcher",
+    "loop_engine",
 ]
 
 
