@@ -12,7 +12,7 @@
 
 ### Session 2026-08-30
 
-- Q: Qual nome exato de pacote deve substituir `agentic_relay`? → A: repo/dist name `agent-crew`; internal Python package `agentcrew`.
+- Q: Qual nome exato de pacote deve ser usado? → A: repo/dist name `agent-crew`; internal Python package `agentcrew`.
 - Q: Como `main()` deve interpretar seus argumentos (subcomando `hello` ou texto direto)? → A: tolerante — aceita um subcomando `hello` opcional, então `python -m agentcrew.cli hello world` e `agentcrew-hello world` funcionam igualmente (Opção A).
 
 ## User Scenarios & Testing

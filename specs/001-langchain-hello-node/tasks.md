@@ -29,7 +29,7 @@ Single Python project: `src/`, `tests/` at repository root (package `agentcrew`)
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Verify `langchain-core>=1.0` is declared in `pyproject.toml` and that `uv lock`/`uv sync --dev` resolves cleanly
+- [ ] T001 Verify `langchain-core>=1.0` is declared in `pyproject.toml` and that `uv lock`/`uv sync` resolves cleanly
 - [ ] T002 [P] Create `src/agentcrew/nodes/__init__.py` package init for the nodes library
 - [ ] T003 [P] Create empty test package inits if missing: `tests/unit/__init__.py` and `tests/integration/__init__.py`
 
@@ -144,4 +144,4 @@ This is a single-story base slice. After US1, future user stories (real multi-no
 - Stop at the Phase 3 checkpoint to validate the MVP independently
 - Avoid: vague tasks, cross-story dependencies, same-file conflicts
 - CI workflow remains disabled (`.github/workflows/ci.yml.disabled`) until a real test suite is in place — do not re-enable in this feature.
-- SC-001 (fresh checkout → output < 2 min) is covered by: `uv sync --dev` in `quickstart.md` (US1-A1) + T009 validation + T010 docs.
+- SC-001 (fresh checkout → output < 2 min) is covered by: `uv sync` in `quickstart.md` (US1-A1) + T009 validation + T010 docs.

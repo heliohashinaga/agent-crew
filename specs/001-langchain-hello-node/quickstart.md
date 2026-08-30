@@ -12,7 +12,7 @@ in `tasks.md`.
 ## Setup
 
 ```sh
-uv sync --dev
+uv sync
 ```
 
 ## Run the hello-world node
@@ -49,7 +49,7 @@ Expected: all tests pass, `ruff` reports no issues.
 
 | Scenario (spec) | How to verify |
 |-----------------|---------------|
-| US1-A1 fresh checkout installs | `uv sync --dev` succeeds |
+| US1-A1 fresh checkout installs | `uv sync` succeeds |
 | US1-A2 run node returns greeting | `uv run python -m agentcrew.cli hello "world"` → `Hello, world!` |
 | US1-A3 tests pass, no network | `uv run pytest` passes offline |
 | US1-A4 extensible source layout | `src/agentcrew/nodes/` holds the node library |
