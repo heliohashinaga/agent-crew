@@ -78,6 +78,35 @@ planner/coder node may call `researcher.lookup(...)` to gather a concise
 summary before writing code. This pass documents that seam without wiring
 it into every planner/coder node.
 
+### `loop_engine` (autonomous control loop)
+
+The `loop_engine` role (`src/ai_factory/loop_engine/`) is a standalone,
+**Library-First** autonomous control-loop capability: it runs an **actor →
+external gate → repair → repeat** loop until the gate passes or termination
+conditions (`max_iterations`, budget, stall ratchet) are met, persisting a
+**durable ledger/spine** so a run can be paused/resumed. It is deliberately
+**not** wired inside `dev_workflow` nodes in v1 (FR-010); workflows/CLIs
+*compose* it.
+
+- **Seams** — injectable `Actor`/`Gate` protocols (`actor.py`/`gate.py`); the
+  deterministic core is **network-free** and testable via `FakeActor`/
+  `FakeGate`. The `CompositeGate` runs deterministic checks first (pluggable,
+  Q4=B), then an independent reviewer (Q2=C, integration-gated).
+- **Safety invariants** — no self-grading (FR-002): success derives only from
+  the external gate; `stalled` is a distinct status (Q5=A); actor-exceptions
+  are budget-bounded retries separate from `max_iterations` (Q6=A); budget is
+  a hard stop within `loop_engine` (Q7=A).
+- **Durable spine** — JSON-lines ledger (`ledger.py`) with atomic append and
+  `run_id`-scoped resume (FR-005).
+- **CLI** — `ai-factory-loop` with JSON/human output and meaningful exit
+  codes (`0` passed / `2` exhausted/escalation/stalled / `3` resolution /
+  `4` error / `1` usage).
+
+Like `researcher`, `loop_engine` carries a constant, non-escalating
+`LoopEngineProfile` (`profile.py`) and is **not** part of
+`capability_levels.FIXED_ROLES`; its termination/escalation is driven by
+runtime `LoopConfig`, not by capability-level escalation.
+
 ## Conventions
 
 - Python ≥ 3.14, managed with `uv`; `src`-layout package `ai_factory`.
@@ -91,6 +120,9 @@ it into every planner/coder node.
 
 ## Task status
 
-The factory now ships the folder-driven `dev-run` workflow plus a standalone
-`researcher` mono-capacity lookup library (repo + web scopes). See the active
-feature's `specs/003-researcher/tasks.md` for the current task list.
+The factory now ships the folder-driven `dev-run` workflow, a standalone
+`researcher` mono-capacity lookup library (repo + web scopes), and a
+standalone `loop_engine` autonomous control-loop library (actor → external
+gate → repair → repeat, with durable ledger + resume). See the active
+feature's `specs/003-researcher/tasks.md` and
+`specs/005-loop-engineering/tasks.md` for the current task lists.

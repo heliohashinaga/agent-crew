@@ -22,6 +22,7 @@ dependencies = [
 dev-run = "ai_factory.cli.dev_run:main"
 folder-adapter = "ai_factory.shared.folder_adapter.cli:main"
 ai-factory-researcher = "ai_factory.researcher.cli:main"
+ai-factory-loop = "ai_factory.loop_engine.cli:main"
 
 [dependency-groups]
 dev = [

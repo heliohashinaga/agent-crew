@@ -27,17 +27,17 @@ is behind injectable seams and gated `-m integration`.
 
 ### US1-US5 Foundation
 
-- [ ] **T001 — Specify & approve** — Author this feature's spec
+^- [x] **T001 — Specify & approve** — Author this feature's spec
       (`specs/005-loop-engineering/spec.md`), research (`research.md`), plan
       (`plan.md`), design artifacts (`data-model.md`, `contracts/`) and this task
       list. Approved by user before implementation begins.
-- [ ] **T002 — Scaffold `loop_engine` package [Red→Green]** — Create package
+- [x] **T002 — Scaffold `loop_engine` package [Red→Green]** — Create package
       skeleton `src/ai_factory/loop_engine/__init__.py` and the module stubs
       (`models.py`, `actor.py`, `gate.py`, `budget.py`, `ledger.py`, `engine.py`,
       `cli.py`, `escalation.py`). Add `tests/unit/loop_engine/` and
       `tests/contract/loop_engine/`. **Red**: a smoke test importing
       `ai_factory.loop_engine.models` and `.engine` fails to collect.
-- [ ] **T003 — Define `CheckResult` + `GateVerdict` models [Red→Green]** —
+- [x] **T003 — Define `CheckResult` + `GateVerdict` models [Red→Green]** —
       `src/ai_factory/loop_engine/models.py`. `CheckResult`: `name: str`,
       `stage: Literal["deterministic","reviewer"]`, `passed: bool`,
       `reasons: list[str] = []`, `consumed: BudgetDelta` (default zero).
@@ -45,23 +45,23 @@ is behind injectable seams and gated `-m integration`.
       `consumed: BudgetDelta`. **Red**: unit test round-trips both via
       `model_validate_json` and asserts a gate is `passed` only when **all**
       checks pass (FR/Q2=C aggregate).
-- [ ] **T004 — Define `BudgetDelta` + `LoopBudget` models [Red→Green]** —
+- [x] **T004 — Define `BudgetDelta` + `LoopBudget` models [Red→Green]** —
       `src/ai_factory/loop_engine/models.py`. `BudgetDelta`: `tokens: int = 0`,
       `cost_usd: float = 0.0`, `latency_s: float = 0.0`. `LoopBudget`:
       `max_tokens: int|None`, `max_seconds: float|None`, `max_cost_usd:
       float|None` (optional; at least one consumable dimension). **Red**: unit
       test builds and round-trips both; zero-defaults for `BudgetDelta`.
-- [ ] **T005 — Define `ActorOutput` + `RepairContext` models [Red→Green]** —
+- [x] **T005 — Define `ActorOutput` + `RepairContext` models [Red→Green]** —
       `src/ai_factory/loop_engine/models.py`. `ActorOutput`: `status: bool`,
       `artifact_refs: list[str] = []`, `description: str = ""`, `summary:
       str = ""`. `RepairContext`: carries the previous `GateVerdict` (bounded,
       concise — never a full dump) (FR-006). **Red**: unit test round-trips
       `ActorOutput` and asserts a `RepairContext` holds a bounded prior verdict.
-- [ ] **T006 — Define `RatchetConfig` model [Red→Green]** —
+- [x] **T006 — Define `RatchetConfig` model [Red→Green]** —
       `src/ai_factory/loop_engine/models.py`. Fields: `max_stall: int`,
       `progress_key: str = "artifact_refs"`. **Red**: unit test round-trips the
       config and asserts defaults.
-- [ ] **T007 — Define `EscalationSummary` + `LoopResult` models [Red→Green]** —
+- [x] **T007 — Define `EscalationSummary` + `LoopResult` models [Red→Green]** —
       `src/ai_factory/loop_engine/models.py`. `EscalationSummary`: `status`,
       `iterations`, `gate_verdicts: list[GateVerdict]` (bounded), `budget_consumed:
       BudgetDelta`, `partial_artifacts: list[str]`. `LoopResult`:
@@ -71,7 +71,7 @@ is behind injectable seams and gated `-m integration`.
       **Red**: unit test round-trips a `LoopResult` and asserts a passed result
       has `escalation: None`, a non-passed result carries `escalation`
       (FR-004).
-- [ ] **T008 — Define `LoopConfig` model [Red→Green]** —
+- [x] **T008 — Define `LoopConfig` model [Red→Green]** —
       `src/ai_factory/loop_engine/models.py`. Fields: `actor`, `gate`,
       `max_iterations: int`, `budget: LoopBudget|None`, `ratchet:
       RatchetConfig|None`, `ledger_dir: Path`, `run_id: str`. Config is validated
@@ -80,7 +80,7 @@ is behind injectable seams and gated `-m integration`.
       empty/missing work payload raises a typed input error rather than running
       unsafely (spec Edge Cases, C2). **Red**: unit tests cover config fail-fast
       AND empty work-input rejection.
-- [ ] **T009 [P] — Define constant execution profile [Red→Green]** —
+- [x] **T009 [P] — Define constant execution profile [Red→Green]** —
       `src/ai_factory/loop_engine/profile.py`. A **constant, non-escalating**
       execution profile for `loop_engine` (logical model, limits) living in the
       library and **NOT** routed through `capability_levels`/`FIXED_ROLES` (no
@@ -92,7 +92,7 @@ is behind injectable seams and gated `-m integration`.
 
 ### Foundational (blocking prerequisites)
 
-- [ ] **T020 — Define `Actor` + `Gate` seam protocols [Red→Green]** —
+- [x] **T020 — Define `Actor` + `Gate` seam protocols [Red→Green]** —
       `src/ai_factory/loop_engine/actor.py` and `gate.py`. `Actor.invoke(context:
       RepairContext) -> ActorOutput`; `Gate.verify(artifact) -> GateVerdict`.
       `FakeActor` (scripted outputs per call, optionally reads `RepairContext`)
@@ -101,7 +101,7 @@ is behind injectable seams and gated `-m integration`.
       **Red**: unit tests drive `FakeActor`/`FakeGate` and assert the seam
       round-trip (deterministic, no network). See
       `contracts/actor-gate-seam.md`.
-- [ ] **T021 — Define `CompositeGate` [Red→Green]** — `src/ai_factory/
+- [x] **T021 — Define `CompositeGate` [Red→Green]** — `src/ai_factory/
       loop_engine/gate.py` (or `composite_gate.py`). Deterministic checks run
       first (network-free) and are **pluggable** (Q4=B): ship defaults
       (`artifact_exists` + caller-supplied suite/contract checks are supplied
@@ -112,25 +112,25 @@ is behind injectable seams and gated `-m integration`.
       test with a failing deterministic check proves the reviewer is **not**
       invoked; with all-deterministic-pass the verdict drives onward. See
       `contracts/actor-gate-seam.md`.
-- [ ] **T022 — Define file-backed ledger (spine) append [Red→Green]** —
+- [x] **T022 — Define file-backed ledger (spine) append [Red→Green]** —
       `src/ai_factory/loop_engine/ledger.py`. JSON-lines journal at
       `<ledger_dir>/<run_id>.ledger.jsonl`; atomic append (write tmp + rename);
       append `ConfigRecord`, `IterationRecord`, `FinalRecord` (see
       `contracts/ledger-format.md`). **Red**: unit test on `tmp_path` appends
       config + 2 iterations + final, reads them back in order, and confirms no
       partial line.
-- [ ] **T023 — Ledger load + resume cursor [Red→Green]** —
+- [x] **T023 — Ledger load + resume cursor [Red→Green]** —
       `src/ai_factory/loop_engine/ledger.py`. Load a ledger for `run_id`; find the
       **last completed `IterationRecord`** (highest `iteration`) as the resume
       cursor. **Red**: unit test on `tmp_path` writes k completed iterations and
       asserts the next iteration is `k+1` (FR-005, SC-004).
-- [ ] **T024 — Corrupt/absent ledger resume behavior [Red→Green]** —
+- [x] **T024 — Corrupt/absent ledger resume behavior [Red→Green]** —
       `src/ai_factory/loop_engine/ledger.py`. On resume, an absent ledger starts
       a **fresh run** (with a warning) or raises a clear typed error; corrupt
       JSON reports clearly — never silently corrupt data (FR-005). **Red**:
       unit tests write a malformed line / no file and assert the documented
       behavior.
-- [ ] **T025 — `run_id` scoping [Red→Green]** — `src/ai_factory/loop_engine/
+- [x] **T025 — `run_id` scoping [Red→Green]** — `src/ai_factory/loop_engine/
       ledger.py`. Deterministic run scoping: resume requires the same `run_id`;
       a resume with a different `run_id` starts a fresh run (documented; no
       silent overwrite of another run). **Red**: unit test resumes with a
@@ -145,18 +145,18 @@ is behind injectable seams and gated `-m integration`.
 > FakeGate, deterministic/network-free — correct iteration counts, repair-context
 > propagation, `passed`/`exhausted` with iteration count (SC-001/SC-002).
 
-- [ ] **T030 — `engine.run_loop` core: pass-on-first [Red→Green]** —
+- [x] **T030 — `engine.run_loop` core: pass-on-first [Red→Green]** —
       `src/ai_factory/loop_engine/engine.py`. Build the minimal control loop:
       iterate `actor.invoke` → `gate.verify`. **Red**: `FakeGate` passes on 1st
       call → `LoopResult(status="passed", iterations=1)` with the actor's
       artifact refs (US1 AS-1).
-- [ ] **T031 — Repair path: feed failure context [Red→Green]** —
+- [x] **T031 — Repair path: feed failure context [Red→Green]** —
       `src/ai_factory/loop_engine/engine.py`. Each failed iteration feeds the
       previous `GateVerdict` (bounded) into the next actor invocation via
       `RepairContext` (FR-006). **Red**: `FakeGate` fails k calls then passes →
       exactly `k+1` iterations; each failure is followed by a repair call whose
       `RepairContext` carries the previous verdict (US1 AS-2).
-- [ ] **T032 — Termination at `max_iterations` [Red→Green]** —
+- [x] **T032 — Termination at `max_iterations` [Red→Green]** —
       `src/ai_factory/loop_engine/engine.py`. Never-passing gate + `max_iterations=N`
       → stop after `≤ N` iterations with `status="exhausted"` — never unbounded
       (FR-003, US1 AS-3, SC-002). **Red**: `FakeGate` never passes, assert
@@ -171,19 +171,19 @@ is behind injectable seams and gated `-m integration`.
 > FakeActor always claims success while FakeGate fails → `exhausted`, reason is
 > the gate's (SC-003).
 
-- [ ] **T040 — No-self-grading invariant [Red→Green]** —
+- [x] **T040 — No-self-grading invariant [Red→Green]** —
       `src/ai_factory/loop_engine/engine.py`. Author a dedicated test asserting
       the loop never uses the actor's `status` claim for the outcome. **Red**:
       `FakeActor` always claims success while `FakeGate` fails → outcome is
       `exhausted` (not `passed`), and the held-back reason is the **gate's**
       (US2 AS-1, SC-003).
-- [ ] **T041 — Bounded reasons to next iteration [Red→Green]** —
+- [x] **T041 — Bounded reasons to next iteration [Red→Green]** —
       `src/ai_factory/loop_engine/engine.py`. A gate failing with structured
       reasons forwards those (bounded, concise) into the next iteration's actor —
       never a full dump (US2 AS-2, FR-006). **Red**: `FakeGate` returns
       structured reasons; assert the next `RepairContext` carries exactly those
       bounds.
-- [ ] **T042 — Gate-unavailable surfaces, never silent pass [Red→Green]** —
+- [x] **T042 — Gate-unavailable surfaces, never silent pass [Red→Green]** —
       `src/ai_factory/loop_engine/engine.py`. A gate that errors/unavailable must
       surface a **typed error** (`LoopGateError`) — never a silent pass or skip
       (US2 AS-3). **Red**: a raising `FakeGate` variant raises the typed error
@@ -198,14 +198,14 @@ is behind injectable seams and gated `-m integration`.
 > deterministic — never-passing gate ≤ N; budget-exceeded → exhausted; stall
 > ratchet terminates no-progress iterations (SC-002).
 
-- [ ] **T050 — Budget tracker [Red→Green]** — `src/ai_factory/loop_engine/
+- [x] **T050 — Budget tracker [Red→Green]** — `src/ai_factory/loop_engine/
       budget.py`. Track tokens/cost/latency (`BudgetDelta`) consumed across
       iterations; stop when a `LoopBudget` dimension is exceeded before the gate
       passes → `exhausted` (FR-003, US3 AS-2). Budget exhausted **mid-iteration**:
       current iteration may finish (atomic checkpoint) but the next does not
       start. **Red**: a slow/budget-consuming `FakeActor` + never-passing gate →
       `exhausted` once budget is exceeded.
-- [ ] **T051 — Stall ratchet [Red→Green]** — `src/ai_factory/loop_engine/
+- [x] **T051 — Stall ratchet [Red→Green]** — `src/ai_factory/loop_engine/
       budget.py` + `engine.py`. Optional `RatchetConfig.max_stall` consecutive
       no-progress iterations → terminate early with `stalled`/`exhausted`
       (US3 AS-3). **Progress** = the set of `artifact_refs` on `ActorOutput`
@@ -213,7 +213,7 @@ is behind injectable seams and gated `-m integration`.
       (FR-003). **Red**: `FakeActor` yields no progress across `max_stall`
       iterations → early `stalled` termination; asserting a changed
       `artifact_refs` set counts as progress.
-- [ ] **T053 — Actor-exception handling [Red→Green]** —
+- [x] **T053 — Actor-exception handling [Red→Green]** —
       `src/ai_factory/loop_engine/engine.py`. When the **actor** raises an
       exception (not just a gate failure), record the iteration as failed with
       the error and apply the repair/retry path (if budget allows) or escalate;
@@ -221,7 +221,7 @@ is behind injectable seams and gated `-m integration`.
       Cases, C1). **Red**: a raising `FakeActor` → the run records the failed
       iteration, applies repair/retry, and resolves to a non-pass `LoopResult`
       (or typed error if fail-fast), never a silent unexpected crash.
-- [ ] **T052 — Human escalation summary [Red→Green]** — `src/ai_factory/
+- [x] **T052 — Human escalation summary [Red→Green]** — `src/ai_factory/
       loop_engine/escalation.py`. Non-pass ending always produces a concise
       `EscalationSummary` (status, iterations, bounded verdicts, budget consumed,
       partial artifact pointers) (FR-004, US3 AS-4). **Red**: an exhausted loop's
@@ -235,18 +235,18 @@ is behind injectable seams and gated `-m integration`.
 > completed checkpoint. **Independent test**: `tmp_path` ledger — interrupt after
 > k iterations, resume to k+1, total preserved (SC-004).
 
-- [ ] **T060 — Engine writes ledger records per iteration [Red→Green]** —
+- [x] **T060 — Engine writes ledger records per iteration [Red→Green]** —
       `src/ai_factory/loop_engine/engine.py`. `run_loop` appends `ConfigRecord`,
       one `IterationRecord` per completed iteration, and a `FinalRecord` to the
       ledger (FR-005, `contracts/ledger-format.md`). **Red**: unit test on
       `tmp_path` asserts a config + N iteration + final records after a run.
-- [ ] **T061 — Resume from last checkpoint [Red→Green]** —
+- [x] **T061 — Resume from last checkpoint [Red→Green]** —
       `src/ai_factory/loop_engine/engine.py`. A resumed run reads the ledger,
       continues from the last completed `IterationRecord` (iteration `k+1`), and
       never re-runs completed iterations (FR-005, US4 AS-1, SC-004). **Red**:
       run with a failing gate, simulate interruption after k iterations (raise /
       stop), resume, assert continuation from `k+1` and correct total.
-- [ ] **T062 — Ledger run summary read [Red→Green]** — `src/ai_factory/
+- [x] **T062 — Ledger run summary read [Red→Green]** — `src/ai_factory/
       loop_engine/ledger.py`. A fresh caller can read a concise run summary
       (iterations, verdicts, budget, status) — human- and machine-readable
       (US4 AS-2). **Red**: unit test reads a completed ledger and renders a
@@ -262,7 +262,7 @@ is behind injectable seams and gated `-m integration`.
 > behind an injectable seam → stdout JSON parses to `LoopResult`, exit codes
 > match outcome (SC-006).
 
-- [ ] **T070 — CLI parser [Red→Green]** — `src/ai_factory/loop_engine/cli.py`,
+- [x] **T070 — CLI parser [Red→Green]** — `src/ai_factory/loop_engine/cli.py`,
       reusing `shared/cli_util.py` (`add_output_format_arg`, `run`, `emit`,
       `write_stdout`). Args: `--actor`, `--gate`, `--run-id`, `--ledger-dir`,
       `--max-iterations` (required), optional `--budget-tokens/-seconds/-cost`,
@@ -271,16 +271,16 @@ is behind injectable seams and gated `-m integration`.
       `pyproject.toml [project.scripts]`. **Red**: contract test asserts a usage
       error (non-zero) when required args are missing. See
       `contracts/loop-cli.md`.
-- [ ] **T071 — CLI passed → JSON + exit 0 [Red→Green]** — `cli.py`. Calling with a
+- [x] **T071 — CLI passed → JSON + exit 0 [Red→Green]** — `cli.py`. Calling with a
       passing fake actor/gate behind the injectable seam prints valid JSON
       `LoopResult` (`status: passed`) to stdout, diagnostics to stderr, exit `0`
       (FR-007, US5 AS-1). **Red**: contract test drives `run(main, [...])` with
       `capsys`.
-- [ ] **T072 — CLI exhausted/escalation → distinct exit [Red→Green]** — `cli.py`.
+- [x] **T072 — CLI exhausted/escalation → distinct exit [Red→Green]** — `cli.py`.
       An exhausted/stalled loop exits non-zero `2` with `status` indicating
       `exhausted` (distinct from hard errors), `escalation` present (US5 AS-2,
       FR-004/FR-007). **Red**: contract test asserts exit `2` and JSON status.
-- [ ] **T073 — CLI human output + resolution/usage exits [Red→Green]** — `cli.py`.
+- [x] **T073 — CLI human output + resolution/usage exits [Red→Green]** — `cli.py`.
       `--output-format human` prints a readable brief (status, iterations,
       verdicts, budget, refs); invalid config (missing actor/gate,
       `--max-iterations <= 0`) → exit `3`; missing/empty args → exit `1`; and an
@@ -288,7 +288,7 @@ is behind injectable seams and gated `-m integration`.
       from usage/resolution (US5 AS-3, FR-007, F2). **Red**: contract tests
       assert human output + the non-zero codes `1` (usage), `3` (resolution),
       and `4` (`error`).
-- [ ] **T074 — Per-iteration telemetry, `role == "loop_engine"` [Red→Green]** —
+- [x] **T074 — Per-iteration telemetry, `role == "loop_engine"` [Red→Green]** —
       `src/ai_factory/loop_engine/engine.py` (and/or `cli.py`). Emit a
       `TelemetryRecord` per iteration via the shared telemetry seam with
       tokens/cost/latency/retries/errors/escalations/result; no secret-looking
@@ -300,43 +300,43 @@ is behind injectable seams and gated `-m integration`.
 
 ### Cross-cutting / integration
 
-- [ ] **T080 — Concrete factory actor binding [Red→Green]** —
+- [x] **T080 — Concrete factory actor binding [Red→Green]** —
       `src/ai_factory/loop_engine/factory_actor.py`. Implement `FactoryActor`
       over the factory folder-driven dev pipeline (approved spec folder →
       execution) as a **library seam** — NOT wired into `dev_workflow` nodes
       (FR-010, FR-012, Q1=A). **Red/Green**: unit test proves it binds to the
       `Actor` protocol; the real end-to-end path is `-m integration`.
-- [ ] **T081 — Independent reviewer gate (integration) [Red→Green]** —
+- [x] **T081 — Independent reviewer gate (integration) [Red→Green]** —
       `src/ai_factory/loop_engine/reviewer_gate.py`. Independent-reviewer
       second-stage gate wired to an injectable provider; network/LLM path under
       `-m integration`; deterministic core stays network-free (FR-011, Q2=C);
       when unavailable it surfaces a typed error or documented skip — never a
       silent pass. **Red**: integration test asserts best-effort reviewer pass/skip
       on real provider, or skips cleanly offline.
-- [ ] **T082 — Docs**: Add `loop_engine` to `AGENTS.md` role list and a short
+- [x] **T082 — Docs**: Add `loop_engine` to `AGENTS.md` role list and a short
       section/example in `README.md` (and `quickstart.md` of this feature).
       Document the intended composition seam (workflows compose it; not wired into
       nodes in v1) (FR-010).
-- [ ] **T083 — Full suite Green + Ruff** — `uv run ruff check .` clean; `uv run
+- [x] **T083 — Full suite Green + Ruff** — `uv run ruff check .` clean; `uv run
       pytest -q` (unit+contract) all pass with **no network**; integration
       (`-m integration`) passes/skips cleanly.
 
 ## Acceptance Handoff
 
-- [ ] **T090 — Against the worked US1** — A loop run with a `FakeActor` + `FakeGate`
+- [x] **T090 — Against the worked US1** — A loop run with a `FakeActor` + `FakeGate`
       (deterministic, network-free) reproduces US1 AS-1/2/3 end-to-end via
       `ai_factory.loop_engine.engine.run_loop`: pass-on-first → `passed`
       iterations=1; fail-k-then-pass → exactly k+1 with repair context;
       never-pass + `max_iterations=N` → `exhausted`, `<= N` iterations. Verified
       via unit/contract/integration tests and CLI probes.
-- [ ] **T091 — Boundary check** — Missing/invalid `--actor`/`--gate`/`--run-id`/
+- [x] **T091 — Boundary check** — Missing/invalid `--actor`/`--gate`/`--run-id`/
       `--max-iterations` → usage/resolution errors; empty work input → typed
       error; gate-unavailable → typed error (never silent pass); corrupt/absent
       ledger on resume → fresh run + warning or clear error; budget/ratchet
       exhaustion → `exhausted`/`stalled`; mixed verdicts (some checks fail) →
       `passed` only when **all** pass. Verified via unit/contract/integration
       tests and CLI probes (edge cases).
-- [ ] **T092 — Deep review** — Read-only review of the diff verifying Library-First
+^- [x] **T092 — Deep review** — Read-only review of the diff verifying Library-First
       (no import of `ai_factory.loop_engine` outside the loop engine package
       except the intended seam), the deterministic core has no network
       (`engine.py` zero network calls), and the reviewer/factory-actor paths are

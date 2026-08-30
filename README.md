@@ -83,11 +83,51 @@ print(result.summary)   # concise, fits the invoking role's context window
 
 # The `web` scope is network-bound: inject collaborators and run under
 # `-m integration` (gated; skippable when network/LLM is unavailable).
+# The `web` scope is network-bound: inject collaborators and run under
+# `-m integration` (gated; skippable when network/LLM is unavailable).
 # from ai_factory.researcher.web import UrllibWebFetcher, UrllibContentFetcher
 # from ai_factory.shared.llm.provider import create_provider
 # result = lookup("login", scope=["web"], llm=..., fetcher=...,
 #                 content_fetcher=...)
 ```
+
+## `loop_engine` autonomous control loop (`specs/005-loop-engineering/`)
+
+`loop_engine` is a standalone, **Library-First** control-loop capability: it
+runs an **actor → external gate → repair → repeat** loop until the external
+gate passes or termination conditions (`max_iterations`, budget, stall
+ratchet) are met, persisting a **durable ledger/spine** so a run can be
+paused/resumed. It is **not** wired inside `dev_workflow` nodes in v1
+(FR-010) — workflows/CLIs compose it.
+
+Run the loop from the CLI (`ai-factory-loop`):
+
+```sh
+uv run ai-factory-loop --actor factory --gate composite \
+  --run-id demo --max-iterations 3 --format json
+```
+
+Or compose it as a library (inject `Actor`/`Gate` seams):
+
+```python
+from ai_factory.loop_engine import LoopConfig, run_loop
+from ai_factory.loop_engine.gate import CompositeGate, artifact_exists
+
+config = LoopConfig(
+    actor=my_actor,            # injectable Actor seam
+    gate=CompositeGate(deterministic=[artifact_exists]),  # Q2=C/C4=B
+    max_iterations=5,
+    run_id="demo",
+)
+result = run_loop(config, ledger_dir=".factory/loops")
+print(result.status, result.iterations)  # passed/exhausted/stalled
+```
+
+Safety invariants: **no self-grading** (success derives only from the external
+gate, FR-002), `stalled` is distinct from `exhausted` (Q5=A), actor-exceptions
+are budget-bounded retries separate from `max_iterations` (Q6=A), and budget
+is a **hard stop** within `loop_engine` (Q7=A). The deterministic core is
+network-free; the independent-reviewer gate is integration-gated.
 
 ## Live LLM provider & dual-mode (`specs/004-llm-live-provider/`)
 
