@@ -40,15 +40,6 @@ specification, with observable telemetry for every step.
 - **Observable** — per-role telemetry (tokens, cost, latency, retries, errors,
   escalations), with secrets auto-redacted before any emission.
 
-## Quick tour (by capability)
-
-| Capability | What it is | Docs |
-|-----------|------------|------|
-| **Folder-driven `dev-run`** | approved spec folder → merge-ready PR | [`specs/002-folder-dev-run/`](specs/002-folder-dev-run/) |
-| **`researcher`** | low-cost, mono-capacity lookup (repo + web) | [`specs/003-researcher/`](specs/003-researcher/) |
-| **Live LLM + dual-mode** | OpenAI-compatible provider, offline/live | [`specs/004-llm-live-provider/`](specs/004-llm-live-provider/) |
-| **`loop_engine`** | autonomous actor→gate→repair control loop | [`specs/005-loop-engineering/`](specs/005-loop-engineering/) |
-
 ---
 
 ## Requirements
