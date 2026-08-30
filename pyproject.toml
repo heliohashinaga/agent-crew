@@ -14,6 +14,7 @@ dependencies = [
     "langchain>=1.0",
     "langchain-core>=1.0",
     "pydantic>=2.0",
+    "python-dotenv>=1.2.3",
 ]
 
 [project.scripts]
@@ -55,7 +56,7 @@ source_paths = ["src/agentcrew/nodes/"]
 # Bring the rest of the package into mutmut's copy workspace so the contract
 # test (which imports agentcrew.cli) can be imported during collection, while
 # only nodes/ stays in scope for mutation.
-also_copy = ["src/agentcrew/__init__.py", "src/agentcrew/cli.py"]
+also_copy = ["src/agentcrew/__init__.py", "src/agentcrew/cli.py", "src/agentcrew/telemetry.py"]
 # Run only the unit tests as mutation detectors (fast, exercise the library
 # logic directly). Contract/integration are not useful per-mutant detectors.
 pytest_add_cli_args_test_selection = ["-m", "unit"]
