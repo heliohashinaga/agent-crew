@@ -29,9 +29,9 @@ Single Python project: `src/`, `tests/` at repository root (package `agentcrew`)
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Verify `langchain-core>=1.0` is declared in `pyproject.toml` and that `uv lock`/`uv sync` resolves cleanly
-- [ ] T002 [P] Create `src/agentcrew/nodes/__init__.py` package init for the nodes library
-- [ ] T003 [P] Create empty test package inits if missing: `tests/unit/__init__.py`, `tests/contract/__init__.py`, and `tests/integration/__init__.py`
+- [X] T001 Verify `langchain-core>=1.0` is declared in `pyproject.toml` and that `uv lock`/`uv sync` resolves cleanly
+- [X] T002 [P] Create `src/agentcrew/nodes/__init__.py` package init for the nodes library
+- [X] T003 [P] Create empty test package inits if missing: `tests/unit/__init__.py`, `tests/contract/__init__.py`, and `tests/integration/__init__.py`
 
 ---
 
@@ -41,7 +41,7 @@ Single Python project: `src/`, `tests/` at repository root (package `agentcrew`)
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 Create the `HelloWorldNodeResult` data model (Pydantic; fields `input: str`, `greeting: str`, with empty-input validation) in `src/agentcrew/nodes/models.py`
+- [X] T004 Create the `HelloWorldNodeResult` data model (Pydantic; fields `input: str`, `greeting: str`, with empty-input validation) in `src/agentcrew/nodes/models.py`
 
 **Checkpoint**: Foundation ready — US1 implementation can begin.
 
@@ -55,13 +55,13 @@ Single Python project: `src/`, `tests/` at repository root (package `agentcrew`)
 
 ### Tests for User Story 1 (TDD — write FIRST, ensure they FAIL before implementation) ⚠️
 
-- [ ] T005 [P] [US1] Unit test: node returns deterministic `{"input": "<text>", "greeting": "Hello, <text>!"}` for identical input, strips surrounding whitespace, and the `HelloWorldNodeResult` model rejects empty and whitespace-only input (model-level validation) — in `tests/unit/test_hello_world.py`
-- [ ] T006 [P] [US1] Contract test (offline; mark `@pytest.mark.contract` so it runs under plain `uv run pytest` and is not excluded by the default `-m 'not integration'` filter): CLI returns `Hello, world!` on stdout with exit code `0`; returns exit code `1` on empty/missing/whitespace-only arg; returns exit code `4` on a forced invocation failure — in `tests/contract/test_hello_world_cli.py`
+- [X] T005 [P] [US1] Unit test: node returns deterministic `{"input": "<text>", "greeting": "Hello, <text>!"}` for identical input, strips surrounding whitespace, and the `HelloWorldNodeResult` model rejects empty and whitespace-only input (model-level validation) — in `tests/unit/test_hello_world.py`
+- [X] T006 [P] [US1] Contract test (offline; mark `@pytest.mark.contract` so it runs under plain `uv run pytest` and is not excluded by the default `-m 'not integration'` filter): CLI returns `Hello, world!` on stdout with exit code `0`; returns exit code `1` on empty/missing/whitespace-only arg; returns exit code `4` on a forced invocation failure — in `tests/contract/test_hello_world_cli.py`
 
 ### Implementation for User Story 1
 
-- [ ] T007 [P] [US1] Implement `build_hello_world_node()` returning a `langchain_core` `Runnable` (via `RunnableLambda`) that validates input against `HelloWorldNodeResult` — in `src/agentcrew/nodes/hello_world.py` (depends on T004)
-- [ ] T008 [US1] Implement CLI `main()` composing the library node: human-readable default output, `--format json` output, input validation, and exit codes `0`/`1`/`4` — in `src/agentcrew/cli.py` (depends on T007)
+- [X] T007 [P] [US1] Implement `build_hello_world_node()` returning a `langchain_core` `Runnable` (via `RunnableLambda`) that validates input against `HelloWorldNodeResult` — in `src/agentcrew/nodes/hello_world.py` (depends on T004)
+- [X] T008 [US1] Implement CLI `main()` composing the library node: human-readable default output, `--format json` output, input validation, and exit codes `0`/`1`/`4` — in `src/agentcrew/cli.py` (depends on T007)
 
 **Checkpoint**: US1 fully functional and testable independently — this is the MVP.
 
@@ -71,9 +71,9 @@ Single Python project: `src/`, `tests/` at repository root (package `agentcrew`)
 
 **Purpose**: Improvements affecting the whole base
 
-- [ ] T009 Run full validation and confirm green: `uv run ruff check .` (no issues) and `uv run pytest` (all pass, including the T006 contract test which is not excluded by the default `-m 'not integration'` filter) per `specs/001-langchain-hello-node/quickstart.md`
-- [ ] T010 [P] Add the run/verify commands and repo short description reference to `README.md` (keep the CI badge; CI stays disabled as `.github/workflows/ci.yml.disabled` during bootstrap)
-- [ ] T011 [P] Add the console-script entry point `agentcrew-hello = "agentcrew.cli:main"` under `[project.scripts]` in `pyproject.toml` and verify `uv sync`/`uv build` succeed with it
+- [X] T009 Run full validation and confirm green: `uv run ruff check .` (no issues) and `uv run pytest` (all pass, including the T006 contract test which is not excluded by the default `-m 'not integration'` filter) per `specs/001-langchain-hello-node/quickstart.md`
+- [X] T010 [P] Add the run/verify commands and repo short description reference to `README.md` (keep the CI badge; CI stays disabled as `.github/workflows/ci.yml.disabled` during bootstrap)
+- [X] T011 [P] Add the console-script entry point `agentcrew-hello = "agentcrew.cli:main"` under `[project.scripts]` in `pyproject.toml` and verify `uv sync`/`uv build` succeed with it
 
 ---
 
