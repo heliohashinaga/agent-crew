@@ -10,7 +10,6 @@ This guide proves the `loop_engine` feature works end-to-end. It is a
 ## 1. Setup & Green baseline
 
 ```bash
-cd /home/helio/repos/ai-dev-factory
 uv run ruff check .          # clean
 uv run pytest -q             # unit + contract, no network
 uv run pytest -m integration # reviewer-gate + real factory-actor (network/LLM, skips cleanly offline)

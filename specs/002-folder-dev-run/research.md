@@ -63,7 +63,7 @@ explicit decisions with rationale and alternatives.
   references are **dropped** from `TechnicalSubtask.files`, with a warning. A
   shared path across tasks marks those tasks as **non-parallel**.
 - **Rationale**: The PoC surfaced absolute-env-path noise (e.g.
-  `/home/helio/repos/ai-factory/pyproject.toml` alongside the relative form)
+  the repo `pyproject.toml` alongside the relative form)
   and duplicate paths (`package.json`, `src/app/page.tsx`) that signal shared
   dependencies. Normalization keeps `files` canonical; dupe detection patterns
   parallelism.

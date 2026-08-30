@@ -46,9 +46,9 @@ what was clarified into the spec/plan/contract.
 
 ## Phase 1: Setup
 
-- [x] T001 Create a fixture speckit folder corpus under `tests/fixtures/specs/` (one full-featured, one readable example with absolute-path noise, one missing `plan.md`, one missing `tasks.md`) in `/home/helio/repos/ai-factory/tests/fixtures/specs/`
-- [x] T002 Verify the repository environment (`uv sync`, `uv run pytest -q` green baseline, `uv run ruff check .` clean) in `/home/helio/repos/ai-factory/`
-- [x] T003 Confirm `spec-run` still present/working as a baseline before removal (exit 0/2/3 with `--auto-approve`) in `/home/helio/repos/ai-factory/`
+- [x] T001 Create a fixture speckit folder corpus under `tests/fixtures/specs/` (one full-featured, one readable example with absolute-path noise, one missing `plan.md`, one missing `tasks.md`) in the repo `tests/fixtures/specs/`
+- [x] T002 Verify the repository environment (`uv sync`, `uv run pytest -q` green baseline, `uv run ruff check .` clean) in the repo root
+- [x] T003 Confirm `spec-run` still present/working as a baseline before removal (exit 0/2/3 with `--auto-approve`) in the repo root
 
 ## Phase 2: Foundational (blocking prerequisites for all user stories)
 
@@ -133,7 +133,7 @@ completes with no `spec_version_id`. Depends on US1/US2 stable.
 - [x] T041 [US3] **Delete** the `spec-workflow` **entry-point modules** (hard removal; no deprecated/retired entry modules remain) — remove `src/ai_factory/spec_workflow/graph.py` (the spec-workflow production graph/entry) and its imports from the entry graph; keep no factory flow that produces a `SpecVersion`/`spec_version_id` beforehand. The independently-tested spec-side **libraries** (`requirements_reviewer`, `spec_agent`) are **retained** as active libraries per Library-First (they are not entry points). (FR-006, clarification Option A)
 - [x] T042 [US3] Migrate `tests/integration/test_spec_workflow.py` to drive the folder-driven `dev-run` (or remove spec-workflow-only cases) in `tests/integration/test_spec_workflow.py` (FR-009)
 - [x] T043 [US3] Migrate `tests/integration/test_handoff.py` to the folder feature-id traceability (no `spec_run_id` input) in `tests/integration/test_handoff.py` (FR-009, SC-006, SC-009)
-- [x] T044 [US3] Update old `001-ai-dev-factory` references and the README/AGENTS to reflect the single folder-driven command in `AGENTS.md` and `/home/helio/repos/ai-factory/README.md` (FR-006)
+- [x] T044 [US3] Update old `001-ai-dev-factory` references and the README/AGENTS to reflect the single folder-driven command in `AGENTS.md` and the repo `README.md` (FR-006)
 - [x] T045 [US3] Validate US3 against quickstart Scenario 4 and mark the US3 checklist item complete
 - [x] T064 [US3] Add a test asserting the folder-driven `dev-run` **rejects/ignores** a `--spec-version` flag (and errors clearly if passed as unsupported rather than silently accepting it), and that a full folder-driven run carries **no `spec_version_id`** in its `PullRequest`/run record (single join key removed) — in `tests/integration/test_dev_run_folder.py` and `tests/unit/cli/test_dev_run_cli.py` (FR-009)
 
@@ -142,7 +142,7 @@ completes with no `spec_version_id`. Depends on US1/US2 stable.
 - [x] T046 [P] Add a `--resume` end-to-end test for the folder-driven `dev-run` (interrupt → resume skips completed checkpoints) in `tests/integration/test_dev_run_folder.py` (FR-014)
 - [x] T047 [P] Add a full-quickstart integration test (Scenarios 1–7) executed via the folder-driven `dev-run` in `tests/integration/test_quickstart.py`
 - [x] T048 [P] Emit per-role telemetry from the folder-driven `dev-run` path (assert no secret-looking values, `overspend` on soft budget) in `tests/integration/test_dev_run_folder.py` and `src/ai_factory/dev_workflow/*/cli.py` (FR-015)
-- [x] T049 [P] Update the CI workflow to run the migrated suite (`ruff` + pytest unit/contract/integration; no network in unit) in `/home/helio/repos/ai-factory/.github/workflows/ci.yml` (FR-009)
+- [x] T049 [P] Update the CI workflow to run the migrated suite (`ruff` + pytest unit/contract/integration; no network in unit) in ``pyproject.toml` CI workflow `.github/workflows/ci.yml`` (FR-009)
 - [x] T050 [P] Audit the adapter library against the library-CLI convention (JSON + human output, meaningful exit codes) in `src/ai_factory/shared/folder_adapter/*.py`
 - [x] T051 [P] Re-run the full quickstart suite for `002-folder-dev-run` (Scenarios 1–7) and mark all checklist items complete
 - [x] T052 [P] Security audit of the `git` SpecSource path — confirm no secret/managed tokens, credentials delegate to the caller's host client, and source-repo content is validated before write-back (no unvalidated write-back); add a red-team case for a malicious/untrusted source repo and a missing/invalid credential (clear non-zero error, no silent fallback) in `tests/unit/shared/folder_adapter/test_git_source.py` and `src/ai_factory/shared/folder_adapter/git_source.py` (FR-012, SC-011)

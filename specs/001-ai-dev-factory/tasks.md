@@ -45,11 +45,11 @@ through a CLI; the two workflows are thin CLIs that compose libraries.
 
 ## Phase 1: Setup
 
-- [x] T001 Create `pyproject.toml` with `uv`, Python ≥ 3.14, `src/` layout, and core deps (`langgraph`, `langsmith`, `pydantic`) in `/home/helio/repos/ai-factory/pyproject.toml`
+- [x] T001 Create `pyproject.toml` with `uv`, Python ≥ 3.14, `src/` layout, and core deps (`langgraph`, `langsmith`, `pydantic`) in the repo `pyproject.toml`
 - [x] T002 Create `src/ai_factory/__init__.py` and the package skeleton (`shared/`, `spec_workflow/`, `dev_workflow/`, `capability_levels/`, `cli/`) with empty `__init__.py` files
 - [x] T003 Create `tests/` skeleton (`tests/unit/`, `tests/contract/`, `tests/integration/`) with a `conftest.py` that asserts no network in unit tests
-- [x] T004 Create `.specify/memory/constitution.md` is already present — add a project-level `AGENTS.md` summarizing Library-First, CLI Interface, Test-First, and the two-workflow boundary in `/home/helio/repos/ai-factory/AGENTS.md`
-- [x] T005 Configure `ruff` and `pytest` in `/home/helio/repos/ai-factory/pyproject.toml` (strict config; integration tests marked separately)
+- [x] T004 Create `.specify/memory/constitution.md` is already present — add a project-level `AGENTS.md` summarizing Library-First, CLI Interface, Test-First, and the two-workflow boundary in the repo `AGENTS.md`
+- [x] T005 Configure `ruff` and `pytest` in the repo `pyproject.toml` (strict config; integration tests marked separately)
 
 ## Phase 2: Foundational (blocking prerequisites for all user stories)
 
@@ -167,7 +167,7 @@ through a CLI; the two workflows are thin CLIs that compose libraries.
 - [x] T084 [P] Add a `--format human` output path to every library CLI in `src/ai_factory/shared/cli_util.py` and `src/ai_factory/**/cli.py`
 - [x] T085 [P] Add end-to-end integration test: spec run + dev run as two distinct traces linked by `spec_version_id`/`spec_run_id` in `tests/integration/test_handoff.py` (FR-024, SC-016, SC-017)
 - [x] T086 [P] Add a `--resume` end-to-end test across the spec workflow (interrupt → resume) in `tests/integration/test_spec_workflow.py` (FR-020)
-- [x] T087 [P] Add a CI workflow (ruff + pytest unit/contract/integration) in `/home/helio/repos/ai-factory/.github/workflows/ci.yml`
-- [x] T088 [P] Add a top-level `README.md` with install (`uv sync`), the two-workflow model, and quickstart links in `/home/helio/repos/ai-factory/README.md`
+- [x] T087 [P] Add a CI workflow (ruff + pytest unit/contract/integration) in ``pyproject.toml` CI workflow `.github/workflows/ci.yml``
+- [x] T088 [P] Add a top-level `README.md` with install (`uv sync`), the two-workflow model, and quickstart links in the repo `README.md`
 - [x] T089 [P] Audit all library CLIs for the library-CLI convention (JSON + human output, meaningful exit codes, redaction) in `src/ai_factory/shared/cli_util.py`
 - [x] T090 [P] Run the full quickstart suite (Scenarios 1–7) as integration tests and confirm all pass in `tests/integration/test_quickstart.py`
