@@ -7,6 +7,8 @@ name = "ai-factory"
 version = "0.1.0"
 description = "AI Dev Factory — autonomous coding that turns a natural-language request into a reviewed, merge-ready pull request"
 readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "Helio Hashinaga", email = "helio@hashinaga.com.br" }]
 requires-python = ">=3.14"
 dependencies = [
     "langgraph>=1.2.10",

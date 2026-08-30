@@ -24,3 +24,40 @@ htmlcov/
 
 # Local tooling (speckit/specify scaffolding)
 .specify/
+
+# ===- Universal / editor / OS patterns ===-===
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Editors / IDEs
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+*~
+
+# Backup / misc
+*.bak
+*.orig
+*.tmp
+
+# Python packaging artifacts not already covered
+*.egg
+*.whl
+*.tar.gz
+
+# Test / coverage extras
+.htmlcov/
+.coverage.*
+*.py[co]  # (already above, kept for clarity)
+
+# OS-generated cruft
+**/.DS_Store
