@@ -160,3 +160,29 @@ for scenarios and the env-var / model-map walkthrough.
 See [`specs/001-ai-dev-factory/quickstart.md`](specs/001-ai-dev-factory/quickstart.md)
 for the full guide and validation Scenarios 1–7, and the `tasks.md` /
 `spec.md` in the same directory for the design and functional requirements.
+
+## Security
+
+- **Credentials are env-only** (FR-018): no keys, tokens, or secrets are ever
+  committed. Credentials load only from the environment or a secret store via
+  `ai_factory.shared.secrets.loader`.
+- **Auto-redaction** (FR-018/SC-003): secret-looking values (`Bearer …`,`api_key=…`,
+  `password=…`) are redacted from all logs, CLI output, and telemetry before
+  emission.
+- **Hermetic CI**: deterministic `lint`/`test`/`integration` jobs block network
+  access; the real-network `live` job runs only on `workflow_dispatch` when
+  explicitly requested.
+- **Deterministic library cores** (`researcher.repo`, `loop_engine`) are
+  network-free; any network/LLM path sits behind injectable seams and is
+  integration-gated.
+- **Review/merge**: no auto-merge to `main`; changes land through reviewed pull
+  requests.
+
+## License
+
+MIT — see [`LICENSE`](LICENSE).
+
+## Contributing
+
+TBD — implementation is driven by the spec-kit workflow (`specs/*/tasks.md`);
+see [`AGENTS.md`](AGENTS.md) for the constitution and conventions.
