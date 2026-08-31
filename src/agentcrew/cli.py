@@ -10,9 +10,16 @@ import json
 import sys
 from collections.abc import Sequence
 
+from dotenv import load_dotenv
+
 from agentcrew.nodes.hello_world import build_hello_world_node
 
 _USAGE = "usage: agentcrew-hello [hello] <text> [--format text|json]"
+
+# Load optional LANGSMITH_* (and other) vars from a local .env if present.
+# Does not override already-set environment variables. Runs before any
+# LangSmith tracing is initialized so a filled .env takes effect.
+load_dotenv()
 
 
 def _parse_format(argv: list[str]) -> tuple[str, list[str]]:
