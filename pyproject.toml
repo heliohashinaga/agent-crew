@@ -13,6 +13,7 @@ requires-python = ">=3.14"
 dependencies = [
     "langchain>=1.0",
     "langchain-core>=1.0",
+    "langchain-openai>=0.3",
     "pydantic>=2.0",
     "python-dotenv>=1.2.3",
 ]
@@ -21,6 +22,8 @@ dependencies = [
 # Library-First + CLI principle: the hello-world base exposes a console script
 # that composes the library node.
 agentcrew-hello = "agentcrew.cli:main"
+# Opt-in LLM CLI: composes the networked LLM node (OpenRouter / OpenCode Go).
+agentcrew-llm = "agentcrew.llm_cli:main"
 
 [dependency-groups]
 dev = [
