@@ -29,8 +29,8 @@ Single Python project: `src/`, `tests/` at repository root (package `agentcrew`)
 
 **Purpose**: Declare the orchestration dependency and package scaffolding
 
-- [ ] T001 Add explicit `langgraph>=1.2.10` to `pyproject.toml` deps; `uv lock`/`uv sync` resolves cleanly (FR-009). `langgraph-checkpoint` is OPTIONAL for v1 — add only if a threaded/checkpointed dev run is needed (YAGNI); otherwise `data-model.md`'s "InMemorySaver (if used)" stays un-reified.
-- [ ] T002 [P] Create `src/agentcrew/agents/__init__.py` and `src/agentcrew/graphs/__init__.py` package inits
+^- [X] T001 Add explicit `langgraph>=1.2.10` to `pyproject.toml` deps; `uv lock`/`uv sync` resolves cleanly (FR-009). `langgraph-checkpoint` is OPTIONAL for v1 — add only if a threaded/checkpointed dev run is needed (YAGNI); otherwise `data-model.md`'s "InMemorySaver (if used)" stays un-reified.
+^- [X] T002 [P] Create `src/agentcrew/agents/__init__.py` and `src/agentcrew/graphs/__init__.py` package inits
 
 ---
 
@@ -40,7 +40,7 @@ Single Python project: `src/`, `tests/` at repository root (package `agentcrew`)
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T003 Add `TaskState`, `CoderOutput`, `CleanerOutput` to `src/agentcrew/nodes/models.py` (per `data-model.md`), with blank-`task` validation. `CoderOutput`/`CleanerOutput` are language-agnostic (no language field — the task may request any language).
+^- [X] T003 Add `TaskState`, `CoderOutput`, `CleanerOutput` to `src/agentcrew/nodes/models.py` (per `data-model.md`), with blank-`task` validation. `CoderOutput`/`CleanerOutput` are language-agnostic (no language field — the task may request any language).
 
 **Checkpoint**: Foundation ready — US1 implementation can begin.
 
@@ -60,15 +60,15 @@ coder-before-cleaner ordering); real LLM calls opt-in via `integration`/`live`.
 
 ### Tests for User Story 1 (TDD — write FIRST, ensure they FAIL before implementation) ⚠️
 
-- [ ] T004 [P] [US1] Unit test (fails first, TDD): `build_coder_node()` wires `task` → `coder_output` with a STUBBED model (no network, so a non-Python task is trivial to stub) — in `tests/unit/test_coder.py` (precedes T007 impl)
-- [ ] T005 [P] [US1] Unit test (fails first, TDD): `build_cleaner_node()` applies semantic rules with a stubbed LLM and **fails gracefully to `coder_output` on model error** — in `tests/unit/test_cleaner.py` (precedes T008 impl)
-- [ ] T006 [P] [US1] Contract test (offline; mark `@pytest.mark.contract`): the graph runs `coder` before `cleaner` and produces `coder_output` then `cleaner_output` (mocked nodes, no network; also assert blank-task rejection) — in `tests/contract/test_coder_cleaner_graph.py`
+^- [X] T004 [P] [US1] Unit test (fails first, TDD): `build_coder_node()` wires `task` → `coder_output` with a STUBBED model (no network, so a non-Python task is trivial to stub) — in `tests/unit/test_coder.py` (precedes T007 impl)
+^- [X] T005 [P] [US1] Unit test (fails first, TDD): `build_cleaner_node()` applies semantic rules with a stubbed LLM and **fails gracefully to `coder_output` on model error** — in `tests/unit/test_cleaner.py` (precedes T008 impl)
+^- [X] T006 [P] [US1] Contract test (offline; mark `@pytest.mark.contract`): the graph runs `coder` before `cleaner` and produces `coder_output` then `cleaner_output` (mocked nodes, no network; also assert blank-task rejection) — in `tests/contract/test_coder_cleaner_graph.py`
 
 ### Implementation for User Story 1
 
-- [ ] T007 [US1] Implement `build_coder_node()` returning a LangGraph node (LLM-backed via `build_llm_node`/provider infra; **language-agnostic** — build the prompt from the task without assuming a language → produces `coder_output`) — in `src/agentcrew/agents/coder.py` (after failing T004)
-- [ ] T008 [US1] Implement `build_cleaner_node()` applying **generic semantic clean code standards** via LLM (opt-in; **language-agnostic**; produces `cleaner_output`; fails gracefully to `coder_output` on model error). Formatting is **out of scope** here — verify `ruff format`/Black is NOT invoked by the cleaner — in `src/agentcrew/agents/cleaner.py` (after failing T005)
-- [ ] T009 [US1] Implement `build_coder_cleaner_graph()` (`StateGraph`: START → coder → cleaner → END) composing T007+T008 — in `src/agentcrew/graphs/coder_cleaner.py`
+^- [X] T007 [US1] Implement `build_coder_node()` returning a LangGraph node (LLM-backed via `build_llm_node`/provider infra; **language-agnostic** — build the prompt from the task without assuming a language → produces `coder_output`) — in `src/agentcrew/agents/coder.py` (after failing T004)
+^- [X] T008 [US1] Implement `build_cleaner_node()` applying **generic semantic clean code standards** via LLM (opt-in; **language-agnostic**; produces `cleaner_output`; fails gracefully to `coder_output` on model error). Formatting is **out of scope** here — verify `ruff format`/Black is NOT invoked by the cleaner — in `src/agentcrew/agents/cleaner.py` (after failing T005)
+^- [X] T009 [US1] Implement `build_coder_cleaner_graph()` (`StateGraph`: START → coder → cleaner → END) composing T007+T008 — in `src/agentcrew/graphs/coder_cleaner.py`
 
 **Checkpoint**: US1 fully functional and testable independently — the MVP.
 
@@ -78,12 +78,12 @@ coder-before-cleaner ordering); real LLM calls opt-in via `integration`/`live`.
 
 **Purpose**: CLI, docs, validation
 
-- [ ] T010 Implement CLI `main()` composing the built graph (text/JSON output, exit codes `0`/`1`/`4`, clear missing-key hint). Pin the error mapping: a node that RAISES maps to `TaskState.error` + exit `4`; the cleaner's graceful fallback (returns `coder_output`) is NOT an error → exit `0` — in `src/agentcrew/coder_cli.py`
-- [ ] T011 [P] Add console-script entry point `agentcrew-code = "agentcrew.coder_cli:main"` under `[project.scripts]` in `pyproject.toml`; `uv sync`/`uv build` succeed (constitution Principle II)
-- [ ] T012 [P] Contract test for the `agentcrew-code` CLI (composes graph with mocks; usage error exit `1`; failure exit `4`) — in `tests/contract/test_coder_cli.py`
-- [ ] T013 Run full validation and confirm green: `uv run ruff check .` and `uv run pytest` (unit + contract) per `quickstart.md`
-- [ ] T014 [P] Add `agentcrew-code` usage + pipeline description to `README.md` and document OpenRouter/OpenCode provider setup (reuse `.env.example` guidance); note the pipeline is language-agnostic
-- [ ] T015 [P] Add an opt-in integration test (marker `integration`/`live`) exercising a real LLM coder→cleaner run (use a non-Python task to demonstrate language-agnostic behavior) in `tests/integration/test_coder_cleaner.py`, and ASSERT (with LangSmith enabled) that the trace surfaces the graph and the `coder`/`cleaner` nodes (closes FR-007/SC-004 coverage)
+^- [X] T010 Implement CLI `main()` composing the built graph (text/JSON output, exit codes `0`/`1`/`4`, clear missing-key hint). Pin the error mapping: a node that RAISES maps to `TaskState.error` + exit `4`; the cleaner's graceful fallback (returns `coder_output`) is NOT an error → exit `0` — in `src/agentcrew/coder_cli.py`
+^- [X] T011 [P] Add console-script entry point `agentcrew-code = "agentcrew.coder_cli:main"` under `[project.scripts]` in `pyproject.toml`; `uv sync`/`uv build` succeed (constitution Principle II)
+^- [X] T012 [P] Contract test for the `agentcrew-code` CLI (composes graph with mocks; usage error exit `1`; failure exit `4`) — in `tests/contract/test_coder_cli.py`
+^- [X] T013 Run full validation and confirm green: `uv run ruff check .` and `uv run pytest` (unit + contract) per `quickstart.md`
+^- [X] T014 [P] Add `agentcrew-code` usage + pipeline description to `README.md` and document OpenRouter/OpenCode provider setup (reuse `.env.example` guidance); note the pipeline is language-agnostic
+^- [X] T015 [P] Add an opt-in integration test (marker `integration`/`live`) exercising a real LLM coder→cleaner run (use a non-Python task to demonstrate language-agnostic behavior) in `tests/integration/test_coder_cleaner.py`, and ASSERT (with LangSmith enabled) that the trace surfaces the graph and the `coder`/`cleaner` nodes (closes FR-007/SC-004 coverage)
 
 ---
 

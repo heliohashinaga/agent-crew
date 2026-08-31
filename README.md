@@ -26,6 +26,23 @@ uv run ruff check .
 uv run pytest
 ```
 
+## Coder → Cleaner pipeline
+
+The first multi-node agent handoff: a **coder** agent writes code from a task
+and a **cleaner** agent applies semantic clean code (descriptive naming, small
+functions, removing redundant comments). It is **language-agnostic** (any
+language the task requests). Requires an LLM provider key in your local `.env`
+(see `.env.example`).
+
+```bash
+uv run agentcrew-code "write a python function that returns the nth fibonacci number"
+uv run agentcrew-code --provider opencode "export a React form component that validates email"
+uv run agentcrew-code "..." --format json
+```
+
+Formatting stays with Black/ruff (the cleaner is **not** responsible for
+formatting) — see [`specs/002-coder-cleaner/`](specs/002-coder-cleaner/spec.md).
+
 ## Observability
 
 Offline per-run metrics (latency, counts, inputs/outputs) come from

@@ -1,5 +1,7 @@
 """Structured data model for agentcrew nodes."""
 
+from typing import TypedDict
+
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -47,3 +49,55 @@ class LLMNodeResult(BaseModel):
         if not value.strip():
             raise ValueError("input must be non-empty text")
         return value
+
+
+class CoderOutput(BaseModel):
+    """Structured output of the coder agent.
+
+    Fields:
+        task: The user-supplied, trimmed task (must be non-empty).
+        model: The provider model id used to generate the code.
+        code: The candidate code produced from ``task`` (any language).
+    """
+
+    task: str = Field(description="User-provided task (trimmed, non-empty).")
+    model: str = Field(description="Provider model id used.")
+    code: str = Field(description="Candidate code produced by the coder.")
+
+    @field_validator("task")
+    @classmethod
+    def _task_must_be_non_empty(cls, value: str) -> str:
+        """Reject empty or whitespace-only task."""
+        if not value.strip():
+            raise ValueError("task must be non-empty text")
+        return value
+
+
+class CleanerOutput(BaseModel):
+    """Structured output of the cleaner agent.
+
+    Fields:
+        code: The input code passed through to the cleaner.
+        refined: The code after applying semantic clean code standards.
+        llm_refine_applied: Whether the LLM semantic refinement ran.
+    """
+
+    code: str = Field(description="The input code passed through.")
+    refined: str = Field(description="Semantic-clean-code result.")
+    llm_refine_applied: bool = Field(description="Whether LLM refinement ran.")
+
+
+class TaskState(TypedDict):
+    """Shared state passed between the coder and cleaner graph nodes.
+
+    Keys:
+        task: The user-supplied task text (non-empty).
+        coder_output: Candidate code produced by the coder node.
+        cleaner_output: Code after the cleaner node (semantic clean code).
+        error: Optional failure message propagated to the CLI.
+    """
+
+    task: str
+    coder_output: str
+    cleaner_output: str
+    error: str | None
