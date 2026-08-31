@@ -13,6 +13,7 @@ from collections.abc import Sequence
 
 from agentcrew.agents import cleaner as cleaner_agents
 from agentcrew.agents import coder as coder_agents
+from agentcrew.agents.clean_code_policy import read_clean_code_policy
 from agentcrew.graphs.coder_cleaner import build_coder_cleaner_graph
 from agentcrew.nodes import llm as llm_nodes
 
@@ -61,6 +62,8 @@ def _build_graph(provider: str, model: str | None):
         cleaner_chat=cleaner_chat,
         provider=provider,
         model=model,
+        # Honor the clean-code skill (SKILL.md) when present; else bundled policy.
+        cleaner_policy=read_clean_code_policy(),
     )
 
 

@@ -28,15 +28,21 @@ def build_coder_cleaner_graph(
     cleaner_chat: Chat | None = None,
     provider: str = "openrouter",
     model: str | None = None,
+    cleaner_policy: str | None = None,
 ):
-    """Return a compiled ``StateGraph`` running coder before cleaner."""
+    """Return a compiled ``StateGraph`` running coder before cleaner.
+
+    ``cleaner_policy`` (optional) is injected into the cleaner's LLM prompt;
+    when None the cleaner uses its bundled clean-code skill policy.
+    """
     g = StateGraph(TaskState)
+    cleaner = build_cleaner_node(
+        chat=cleaner_chat, provider=provider, model=model, policy=cleaner_policy
+    )
     g.add_node(
         "coder", build_coder_node(chat=coder_chat, provider=provider, model=model)
     )
-    g.add_node(
-        "cleaner", build_cleaner_node(chat=cleaner_chat, provider=provider, model=model)
-    )
+    g.add_node("cleaner", cleaner)
     g.add_edge(START, "coder")
     g.add_edge("coder", "cleaner")
     g.add_edge("cleaner", END)
