@@ -55,8 +55,11 @@ Concrete structured results (mirroring the existing `LLMNodeResult` pattern):
   formatting is delegated to a formatter (Black/ruff) run outside the cleaner
   node — the same path the project's CI/editor tooling already uses. This keeps
   the formatting step deterministic and the LLM out of that path.
-- Empty/whitespace-only `task` is an input error — the CLI rejects it with a
-  usage error (exit code `1`), per the contract.
+- The pipeline is **language-agnostic** (user clarification, Session 2026-08-31):
+  the `task` may request any language; the coder emits code in that language and
+  the cleaner applies generic clean-code heuristics. No per-language
+  formatting/rules run inside the pipeline; formatting stays only in the repo's
+  existing Python (Black/ruff) tooling.
 - Empty/whitespace-only `task` is an input error — the CLI rejects it with a
   usage error (exit code `1`), per the contract.
 

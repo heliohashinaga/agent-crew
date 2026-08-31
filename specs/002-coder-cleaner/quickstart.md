@@ -35,6 +35,13 @@ Run the pipeline:
 uv run agentcrew-code "write a python function that returns the nth fibonacci number"
 # text (default): prints the cleaned code
 
+uv run agentcrew-code "export a React form component that validates email" --provider opencode
+```
+
+The pipeline is **language-agnostic** — the task may request any language; the
+coder emits code in that language and the cleaner applies generic clean-code
+heuristics (formatting stays only in the repo's Python Black/ruff tooling).
+
 uv run agentcrew-code "..." --format json
 # JSON: {"task": "...", "coder_output": "...", "cleaner_output": "...", "model": "..."}
 

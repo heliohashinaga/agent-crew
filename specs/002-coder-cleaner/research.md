@@ -47,6 +47,9 @@ cleaner) while keeping the offline/deterministic base and opt-in LLM behavior?
    formatting delegated to Black/ruff outside the cleaner (FR-005).
 5. `CoderCleanerGraph` — `StateGraph`: START → coder → cleaner → END.
 6. `agentcrew-code` CLI + offline contract/unit tests; opt-in real-LLM test.
+7. **Language-agnostic** (clarification, Session 2026-08-31): the coder emits code
+   in whatever language the task asks; the cleaner applies generic clean-code
+   heuristics with no per-language rules/formatting inside the pipeline.
 
 ## Trade-offs
 

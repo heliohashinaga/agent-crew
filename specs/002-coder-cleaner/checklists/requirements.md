@@ -32,10 +32,12 @@
 
 ## Notes
 
-- Three open design questions were resolved during planning and recorded as
+- Four overall design decisions were resolved and recorded as
   Clarifications/Assumptions: **semantic-only cleaner** (formatting delegated to
-  Black/ruff; the LLM applies semantic clean code), **`agentcrew-code` CLI** in
-  scope, and **spec package location** (`specs/002-coder-cleaner/`).
+  Black/ruff; the LLM applies semantic clean code), **language-agnostic coder /
+  cleaner** (any language the task requests; no per-language formatting in the
+  pipeline), **`agentcrew-code` CLI** in scope, and **spec package location**
+  (`specs/002-coder-cleaner/`).
 - The LLM/LangGraph/uv choices appear in **Assumptions** as explicit constraints
   (matching the 001 precedent); FRs and SCs remain technology-agnostic.
 - Readiness: spec is ready for `/speckit.plan`.

@@ -8,8 +8,9 @@
 
 Deliver the first **multi-node LangGraph orchestration** in `agent-crew`: a
 two-stage pipeline where a **coder** agent writes code from a task and a
-**cleaner** agent refines it (semantic clean code). This is the first concrete
-agent-to-agent handoff in the swarm vision. The graph plumbing runs fully offline
+**cleaner** agent refines it (semantic clean code). It is **language-agnostic**:
+the task may request any language. This is the first concrete agent-to-agent
+handoff in the swarm vision. The graph plumbing runs fully offline
 (testable with mocked node outputs, credential-free); the LLM-backed coder and
 semantic cleaner reuse the existing provider infra and remain opt-in. Formatting
 is delegated to Black/ruff, outside the cleaner (FR-005).
@@ -32,9 +33,9 @@ the existing markers (`unit`, `contract`, `integration`, `live`).
 
 **Project Type**: library + CLI (`src-layout` package `agentcrew`)
 
-**Constraints**: Graph offline-testable; Coder + semantic Cleaner LLM opt-in
-(`ANTHROPIC`/OpenRouter/OpenCode keys via `.env`); formatting stays in
-Black/ruff (FR-005).
+**Constraints**: Graph offline-testable; Coder + semantic Cleaner **LLM opt-in**
+and **language-agnostic** (any language the task requests; no per-language rules
+in the pipeline); formatting stays in Black/ruff (Python-only, FR-005).
 
 **Scale/Scope**: Fixed linear two-node pipeline. No routing, loops, HITL, or
 cross-process persistence.
@@ -97,8 +98,10 @@ src/agentcrew/
 └── ... (existing cli.py, llm_cli.py)
 
 tests/
-├── contract/test_coder_cleaner_graph.py  # handoff ordering + shape (mocked)
-└── integration/test_coder_cleaner.py     # real LLM (marker integration/live)
+├── unit/test_coder.py                 # coder node, stubbed model (TDD, T006-unit)
+├── unit/test_cleaner.py               # cleaner node, stubbed model + graceful fallback (TDD, T007-unit)
+├── contract/test_coder_cleaner_graph.py  # handoff ordering + shape (mocked, T005)
+└── integration/test_coder_cleaner.py     # real LLM (marker integration/live, T014)
 ```
 
 **Structure Decision**: Keep the agents as standalone library nodes

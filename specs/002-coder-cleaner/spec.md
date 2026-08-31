@@ -20,6 +20,11 @@ cleans it before it is considered done.
 - Q: Precisa de CLI para rodar o pipeline? → A: sim, um comando **`agentcrew-code`**
   é parte do escopo planejado, mas pode ser entregue depois da biblioteca/tests.
 - Q: Onde fica o plano? → A: persistido em `specs/002-coder-cleaner/` (este pacote).
+- Q: O coder/cleaner devem gerar/limpar só Python ou qualquer linguagem pedida pela
+  tarefa? → A: **language-agnostic** — a tarefa pode pedir qualquer linguagem; o
+  coder gera na linguagem pedida e o cleaner aplica heurísticas de clean code
+  genéricas (nomeação, funções pequenas, comentários redundantes), sem formatação/
+  regras por linguagem.
 
 ## User Scenarios & Testing
 
@@ -114,8 +119,9 @@ cleaner) is covered by integration tests marked `integration`/`live` (opt-in).
 
 - **SC-001**: The pipeline runs the coder before the cleaner on every invocation
   (verified by an offline contract test with mocked node outputs).
-- **SC-002**: Formatting is deterministic — the same code formats identically via
-  the formatter every time (no LLM in the formatting path).
+- **SC-002**: The formatting path used by agent-crew stays deterministic —
+  identical input always formats identically — satisfied by the existing
+  Black/ruff tooling; the LLM never touches formatting (FR-005).
 - **SC-003**: The graph plumbing and the coder→cleaner handoff pass the offline
   test suite (stubbed node outputs) with no network access and no credentials.
 - **SC-004**: With LangSmith enabled, a real run produces a trace showing the
@@ -126,23 +132,26 @@ cleaner) is covered by integration tests marked `integration`/`live` (opt-in).
 - The pipeline is built on **LangGraph** (1.x, `StateGraph`/`START`/`END`) for
   multi-node orchestration, matching the constitution's swarm vision. LangGraph
   becomes an explicit dependency.
-- **Coder** is LLM-backed and reuses the existing provider infrastructure
+- **Coder** is LLM-backed and **language-agnostic**: it generates code in whatever
+  language the task asks for (the user story's "write a Python function…" is just
+  an example). It reuses the existing provider infrastructure
   (`agentcrew.nodes.llm`: OpenRouter / OpenCode Go), reading keys from the local
   `.env`. It is opt-in (needs an API key).
-- **Cleaner** is **LLM-backed and semantic-only**: it applies the semantic clean
-  code standards (descriptive naming, small single-purpose functions, removing
-  redundant comments). It is explicitly **not** responsible for formatting —
-  formatting is delegated to a deterministic formatter (Black/ruff) run where the
-  project already runs it (CI/editor tooling), keeping the formatter quirk-free
-  and the LLM out of the deterministic path.
+- **Cleaner** is **LLM-backed, semantic-only, and language-agnostic**: it applies
+  generic clean-code standards (descriptive naming, small single-purpose
+  functions, removing redundant comments) in whatever language the code is. It is
+  explicitly **not** responsible for formatting — formatting is delegated to a
+  deterministic formatter (Black/ruff) where the project already runs it
+  (CI/editor tooling), which remains Python-only; the LLM never touches
+  formatting (FR-005), and no per-language rules/formatting run inside the
+  pipeline for non-Python output.
 - Removing dead code / unused imports is a future "lint" step, out of v1 (it
   requires interpreting the language).
 - A console script **`agentcrew-code`** exposes the pipeline (same exit-code
   protocol `0`/`1`/`4`, text/JSON output) following constitution Principle II.
-- Formatting stays in Black/ruff — the same deterministic tooling the repo
-  already runs in CI/editors. The pipeline does not ship its own formatter, and
-  the cleaner never invokes formatting (FR-005). Removing dead code / unused
-  imports is a future "lint" step.
+- The pipeline does not ship its own formatter and the cleaner never invokes
+  formatting (FR-005) — Black/ruff remain the single deterministic formatting
+  path, identical to the repo's CI/editor tooling.
 - LangSmith tracing is opt-in via the existing `LANGSMITH_*` env vars.
 
 ## Out of Scope (v1)
@@ -153,4 +162,8 @@ cleaner) is covered by integration tests marked `integration`/`live` (opt-in).
 - Persistence/checkpointing across processes (InMemorySaver only for dev/tests).
 - Actual execution/lint of the produced code (cleaner only normalizes text; it
   does not import or run the generated code).
-- A marketplace or multi-language codegen beyond the prompt-driven coder.
+- A marketplace or multi-language codegen *beyond* the prompt-driven coder: the
+  coder is language-agnostic, but only via LLM prompting — there is no
+  per-language engine, formatter, or linter inside the pipeline. Formatting stays
+  only in the repo's existing Python tooling (Black/ruff); "lint" (dead code /
+  unused imports) remains a future step.

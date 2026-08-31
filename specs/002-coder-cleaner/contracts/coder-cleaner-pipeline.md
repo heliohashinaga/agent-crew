@@ -5,7 +5,10 @@
 ## Purpose
 
 Pin the observable contract of the coder→cleaner pipeline: the node-to-node
-handoff (Principle IV) and the `agentcrew-code` CLI surface (Principle II).
+handoff (Principle IV) and the `agentcrew-code` CLI surface (Principle II). The
+pipeline is **language-agnostic** (Session 2026-08-31 clarification): it accepts a
+task in any language and returns code in that language; formatting stays only in
+the repo's Python Black/ruff tooling.
 
 ## Handoff contract (node-to-node)
 
