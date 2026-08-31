@@ -40,3 +40,33 @@ def test_cleaner_returns_partial_update_only():
     state = {"task": "x", "coder_output": "code", "cleaner_output": "", "error": None}
     out = node(state)
     assert set(out.keys()) == {"cleaner_output"}
+
+
+def test_cleaner_injects_policy_into_prompt():
+    prompts: list[str] = []
+
+    def spy(prompt: str) -> str:
+        prompts.append(prompt)
+        return "cleaned"
+
+    node = build_cleaner_node(chat=spy, model="stub", policy="CUSTOM-POLICY")
+    state = {"task": "x", "coder_output": "code", "cleaner_output": "", "error": None}
+    node(state)
+    assert prompts, "cleaner should call the LLM when a chat is provided"
+    assert "CUSTOM-POLICY" in prompts[0]
+
+
+def test_read_policy_strips_frontmatter(tmp_path):
+    from agentcrew.agents.clean_code_policy import read_clean_code_policy
+
+    f = tmp_path / "SKILL.md"
+    f.write_text("---\nname: clean-code\n---\nApply good names.", encoding="utf-8")
+    assert read_clean_code_policy(source=f) == "Apply good names."
+
+
+def test_bundled_policy_excludes_formatting():
+    from agentcrew.agents.clean_code_policy import CLEAN_CODE_POLICY
+
+    lower = CLEAN_CODE_POLICY.lower()
+    assert "descriptive, intent-revealing names" in lower
+    assert "changes" not in lower.split("reformat")[0]  # no formatting duties

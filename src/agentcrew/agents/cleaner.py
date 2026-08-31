@@ -16,17 +16,18 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+from agentcrew.agents.clean_code_policy import CLEAN_CODE_POLICY
 from agentcrew.nodes.llm import build_llm_node
 from agentcrew.nodes.models import CleanerOutput, TaskState
 
 Chat = Callable[[str], str]
 
 # Generic semantic clean-code instruction; not tied to any language.
-_PROMPT = (
+_PROMPT_TEMPLATE = (
     "You are a code-cleaner. Improve the code below with semantic clean-code "
-    "standards: descriptive names, small single-purpose functions, and removing "
-    "redundant comments. Do NOT reformat or change behavior. Keep the same "
-    "language. Return ONLY the improved code.\n\n"
+    "standards. Do NOT reformat or change behavior. Keep the same language. "
+    "Return ONLY the improved code.\n\n"
+    "Standards:\n{policy}\n\n"
     "Code:\n```\n{code}\n```"
 )
 
@@ -51,10 +52,13 @@ def build_cleaner_node(
     chat: Chat | None = None,
     provider: str = "openrouter",
     model: str | None = None,
+    policy: str = CLEAN_CODE_POLICY,
 ) -> Callable[[TaskState], dict[str, str]]:
     """Return a LangGraph node that fills ``cleaner_output`` via semantic clean code.
 
     ``chat=None`` means no LLM is configured -> code passes through unchanged.
+    ``policy`` is the semantic clean-code standards text injected into the prompt
+    (default: the bundled clean-code skill policy).
     """
 
     effective = chat if chat is not None else default_chat(provider, model)
@@ -65,7 +69,8 @@ def build_cleaner_node(
         applied = False
         if chat is not None:  # only attempt LLM when explicitly configured
             try:
-                refined = effective(_PROMPT.format(code=code))
+                prompt = _PROMPT_TEMPLATE.format(policy=policy, code=code)
+                refined = effective(prompt)
                 applied = True
             except Exception:  # noqa: BLE001 - graceful fallback per spec
                 refined = code
